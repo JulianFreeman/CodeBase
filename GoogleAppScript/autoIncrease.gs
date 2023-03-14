@@ -1,8 +1,8 @@
 function onEdit(e) {
   //格式：key: 表格名称，value: 自增列的列索引（从 1 开始）
-  let allowedSheetNames = {
+  const allowedSheetNames = {
     "日志": 1,
-  }
+  };
   //如果是删除值，会返回 undefined，我们忽略删除值的情况
   if (e.value !== undefined) {
     //当前编辑的表格
