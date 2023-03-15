@@ -1,3 +1,20 @@
+/**
+ * @param {number} index
+ * @return {string}
+ */
+function getColumnLabelByIndex(index) {
+  const alphbet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  if (index < 1) return "";
+  if (index < 27) return alphbet[index - 1];
+  let q = Math.floor(index / 26);
+  let r = index % 26;
+  if (r === 0) {
+    q -= 1;
+    r = 26;
+  }
+  return getColumnLabelByIndex(q) + alphbet[r - 1];
+}
+
 function onEdit(e) {
   //格式：key: 表格名称，value: 自增列的列索引（从 1 开始）
   const allowedSheetNames = {
@@ -13,7 +30,7 @@ function onEdit(e) {
       //自增列索引
       let idCol = allowedSheetNames[sheetName];
       //自增列标签
-      let idColLabel = String.fromCharCode(64+idCol);
+      let idColLabel = getColumnLabelByIndex(idCol);
       //编辑单元格所在的行号
       let editedRow = e.range.getRow();
       //当编辑单元格所在的列号不是自增列时，如果编辑的是自增列我们忽略
