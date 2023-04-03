@@ -1,6 +1,47 @@
 # coding: utf8
 from __future__ import annotations
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
+
+
+def request_input(prompt_msg: str, err_msg="Invalid value.",
+                  *,
+                  has_default_val=True, default_val="",
+                  has_quit_val=True, quit_val="q",
+                  func: Callable[[Any], bool] = None, ask_again=True,
+                  need_confirm=False):
+    while True:
+        print(prompt_msg, end="")
+
+        if has_default_val:
+            print(f"\nDefault [{default_val}]: ", end="")
+            inp = input() or default_val
+        else:
+            inp = input(": ")
+
+        if has_quit_val and inp == quit_val:
+            print("Quit.")
+            return "", False
+
+        if func is not None and (not func(inp)):
+            print(err_msg, end=" ")
+            if ask_again:
+                print("Please enter again.")
+                continue
+            else:
+                print()
+                return "", False
+
+        if need_confirm:
+            res, state = request_input(
+                f"Do you confirm the value [{inp}]",
+                has_default_val=False, has_quit_val=False,
+                ask_again=True, need_confirm=False,
+                func=lambda x: x.lower() in ("y", "yes", "n", "no")
+            )
+            if res in ("n", "no"):
+                continue
+
+        return inp, True
 
 
 class CliHelper(object):
@@ -30,6 +71,7 @@ class CliHelper(object):
             "bottom_padding": 1,
             "border_char": "#",
             "serial_marker": ". ",
+            "draw_menu_again": False,
         }
 
     def _draw_menu(self, p_option: _OptionNode):
@@ -65,6 +107,8 @@ class CliHelper(object):
                    kwargs: dict = None) -> _OptionNode:
         if parent is None:
             parent = self._root
+        if not parent.title.endswith(" [d]"):
+            parent.title = f"{parent.title} [d]"
         option = self._OptionNode(title, func, args, kwargs)
         parent.children.append(option)
 
@@ -83,27 +127,26 @@ class CliHelper(object):
                 self._config[k] = kwargs[k]
 
     @staticmethod
-    def _request_input(p_option: _OptionNode) -> Optional[_OptionNode]:
-        choice = input("\nYour option: ")
-        if not choice.isdigit():
-            print("No such option, please enter again")
+    def _request_option(p_option: _OptionNode) -> Optional[_OptionNode]:
+        choice, state = request_input(
+            "\nYour option", "No such option.",
+            has_default_val=False,
+            func=lambda x: x.isdigit() and 1 <= int(x) <= len(p_option.children),
+            ask_again=False, need_confirm=False
+        )
+        if state is False:
             return None
 
-        c = int(choice)
-        if c < 1 or c > len(p_option.children):
-            print("No such option, please enter again")
-            return None
-
-        return p_option.children[c - 1]
+        return p_option.children[int(choice) - 1]
 
     def _enter_level(self, p_option: _OptionNode):
         stop = 0
         while not stop:
-            if stop == 0:
+            if self._config["draw_menu_again"] or stop == 0:
                 self._draw_menu(p_option)
             stop = None
 
-            opt = self._request_input(p_option)
+            opt = self._request_option(p_option)
             if opt is None:
                 continue
 
