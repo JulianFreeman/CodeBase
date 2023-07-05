@@ -5,3 +5,7 @@
 # EasyRSA
 
 简易的 RSA 加密工具。
+
+# translator
+
+类似于 linguist 的翻译工具。
