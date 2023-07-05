@@ -2,6 +2,9 @@
 
 # Change Log:
 #
+# v1.3
+# 1. 菜单的空白字符可以自定义了
+#
 # v1.2
 # 1. 增加显示版本号
 # 2. 禁用获取菜单选项时的退出值
@@ -25,7 +28,7 @@
 from __future__ import annotations
 from typing import Callable, Optional
 
-version = (1, 2, 20230705)
+version = (1, 3, 20230705)
 
 
 def request_input(prompt_msg: str,
@@ -129,6 +132,7 @@ class CliHelper(object):
                  top_padding: int = 1,
                  bottom_padding: int = 1,
                  border_char: str = "#",
+                 wall_char: str = " ",
                  serial_marker: str = ". ",
                  draw_menu_again: bool = False,
                  show_version: bool = True):
@@ -140,6 +144,7 @@ class CliHelper(object):
         self._top_padding = top_padding
         self._bottom_padding = bottom_padding
         self._border_char = border_char
+        self._wall_char = wall_char
         self._serial_marker = serial_marker
         self._draw_menu_again = draw_menu_again
 
@@ -168,6 +173,7 @@ class CliHelper(object):
         top = self._top_padding
         bottom = self._bottom_padding
         bc = self._border_char
+        wc = self._wall_char
         sm = self._serial_marker
 
         max_len_option = self._get_max_length_of_option_titles(p_option)
@@ -180,9 +186,9 @@ class CliHelper(object):
         # 上下边界
         top_bottom_border = bc * (menu_width + len(bc) * 2)
         # 墙是包括边界和空白
-        top_bottom_wall = f"{bc}{' ' * menu_width}{bc}"
-        left_wall = f"{bc}{' ' * left}"
-        right_wall = f"{' ' * right}{bc}"
+        top_bottom_wall = f"{bc}{wc * menu_width}{bc}"
+        left_wall = f"{bc}{wc * left}"
+        right_wall = f"{wc * right}{bc}"
 
         print("\n".join([top_bottom_border] + [top_bottom_wall] * top))
         for i, opt in enumerate(p_option.children):
