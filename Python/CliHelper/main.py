@@ -11,10 +11,9 @@ def new_folder(name):
 
 
 def test_helper():
-    c = CliHelper()
-    c.config(right_padding=20, draw_menu_again=True)
+    c = CliHelper(right_padding=20, draw_menu_again=False)
     n = c.add_option(title="New")
-    c.add_option(title="Open File", func=open_file)
+    c.add_option(title="Open File", exec_func=open_file)
     c.add_option(title="Save")
     c.add_exit_option()
 
@@ -27,8 +26,9 @@ def test_helper():
 
 
 def test_req():
-    v = request_input("\nEnter a number", func=lambda x: x.isdigit() and 1 < int(x) < 10, ask_again=True,
-                      has_default_val=True, default_val="4", need_confirm=True)
+    v = request_input("\nEnter a number", check_func=lambda x: x.isdigit() and 1 < int(x) < 10, ask_again=False,
+                      has_default_val=True, default_val="4",
+                      need_confirm=True)
     print(v)
 
 
