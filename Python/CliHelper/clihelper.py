@@ -1,6 +1,11 @@
 # coding: utf8
 
 # Change Log:
+#
+# v1.2
+# 1. 增加显示版本号
+# 2. 禁用获取菜单选项时的退出值
+#
 # v1.1
 # 1. 增加注释
 # 2. 其他改动
@@ -20,7 +25,7 @@
 from __future__ import annotations
 from typing import Callable, Optional
 
-version = (1, 1, 20230705)
+version = (1, 2, 20230705)
 
 
 def request_input(prompt_msg: str,
@@ -125,7 +130,8 @@ class CliHelper(object):
                  bottom_padding: int = 1,
                  border_char: str = "#",
                  serial_marker: str = ". ",
-                 draw_menu_again: bool = False):
+                 draw_menu_again: bool = False,
+                 show_version: bool = True):
 
         self._root = self._OptionNode("Main Menu")
 
@@ -136,6 +142,9 @@ class CliHelper(object):
         self._border_char = border_char
         self._serial_marker = serial_marker
         self._draw_menu_again = draw_menu_again
+
+        if show_version:
+            print(f"CliHelper v{version[0]}.{version[1]} ({version[-1]})\n")
 
     @staticmethod
     def _get_max_length_of_option_titles(p_option: _OptionNode) -> int:
@@ -191,7 +200,7 @@ class CliHelper(object):
         """
         choice, state = request_input(
             "\nYour option", "No such option.",
-            has_default_val=False,
+            has_default_val=False, has_quit_val=False,
             check_func=lambda x: x.isdigit() and 1 <= int(x) <= len(p_option.children),
             ask_again=False, need_confirm=False
         )
