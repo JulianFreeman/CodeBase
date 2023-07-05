@@ -73,8 +73,9 @@ def gen_new_keys():
     u_save_path, state = request_input(
         "\nEnter the path where to save the keys",
         "Please enter a valid path.",
+        has_default_val=True,
         default_val=config.get("keys_save_path", BASE_PATH),
-        func=_is_dir,
+        check_func=_is_dir,
     )
     if state is False:
         return None
@@ -82,6 +83,7 @@ def gen_new_keys():
 
     keys_name, state = request_input(
         "\nEnter the name for key files",
+        has_default_val=True,
         default_val=config.get("keys_default_name", "key"),
     )
     if state is False:
@@ -90,8 +92,9 @@ def gen_new_keys():
     key_len, state = request_input(
         "\nEnter the key bit length",
         "It's not a digit.",
+        has_default_val=True,
         default_val=config.get("key_bit_length", "1024"),
-        func=lambda x: x.isdigit(),
+        check_func=lambda x: x.isdigit(),
     )
     if state is False:
         return None
@@ -137,8 +140,7 @@ def load_key():
     load_path, state = request_input(
         "\nEnter the key path",
         "Invalid file path.",
-        has_default_val=False,
-        func=_is_file,
+        check_func=_is_file,
     )
     if state is False:
         return None
@@ -181,8 +183,7 @@ def encrypt_file():
     opt, state = request_input(
         "\nChoose the public key you want to use to encrypt",
         "No such option.",
-        has_default_val=False,
-        func=lambda x: x.isdigit() and int(x) in range(ln_public_keys),
+        check_func=lambda x: x.isdigit() and int(x) in range(ln_public_keys),
     )
     if state is False:
         return None
@@ -199,8 +200,7 @@ def encrypt_file():
     tar_file, state = request_input(
         "\nEnter the file path you want to encrypt",
         "Invalid file path.",
-        has_default_val=False,
-        func=_is_file,
+        check_func=_is_file,
     )
     if state is False:
         return None
@@ -256,8 +256,7 @@ def decrypt_file():
     opt, state = request_input(
         "\nChoose the private key you want to use to decrypt",
         "No such option.",
-        has_default_val=False,
-        func=lambda x: x.isdigit() and int(x) in range(ln_private_keys),
+        check_func=lambda x: x.isdigit() and int(x) in range(ln_private_keys),
     )
     if state is False:
         return None
@@ -274,8 +273,7 @@ def decrypt_file():
     tar_file, state = request_input(
         "\nEnter the file path you want to decrypt",
         "Invalid file path.",
-        has_default_val=False,
-        func=_is_file,
+        check_func=_is_file,
     )
     if state is False:
         return None
@@ -317,12 +315,11 @@ def decrypt_file():
 
 
 def main():
-    cmd = CliHelper()
-    cmd.config(draw_menu_again=True)
-    cmd.add_option(title="Generate New Keys", func=gen_new_keys)
-    cmd.add_option(title="Load Key", func=load_key)
-    cmd.add_option(title="Encrypt File", func=encrypt_file)
-    cmd.add_option(title="Decrypt File", func=decrypt_file)
+    cmd = CliHelper(draw_menu_again=True)
+    cmd.add_option(title="Generate New Keys", exec_func=gen_new_keys)
+    cmd.add_option(title="Load Key", exec_func=load_key)
+    cmd.add_option(title="Encrypt File", exec_func=encrypt_file)
+    cmd.add_option(title="Decrypt File", exec_func=decrypt_file)
     cmd.add_exit_option()
 
     cmd.start_loop()
