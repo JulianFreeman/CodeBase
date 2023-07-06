@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file>translator16.ico</file>
+  </qresource>
+</RCC>

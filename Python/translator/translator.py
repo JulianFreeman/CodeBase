@@ -2,6 +2,10 @@
 
 # Change log
 #
+# v1.1
+# 1. 添加图标文件
+# 2. 优化删除操作
+#
 # v1.0
 # 初始版本
 #
@@ -17,9 +21,11 @@
 
 import json
 import sys
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtGui
 
-version = (1, 0, 20230705)
+import icons
+
+version = (1, 1, 20230705)
 
 
 class DebugWin(QtWidgets.QDialog):
@@ -68,6 +74,7 @@ class UiMainWin(object):
     def __init__(self, window: QtWidgets.QWidget):
         window.resize(800, 600)
         window.setWindowTitle("Translator Editor")
+        window.setWindowIcon(QtGui.QIcon(":/translator16.ico"))
 
         self.hly_file_op = QtWidgets.QHBoxLayout()
         self.pbn_new = QtWidgets.QPushButton("New", window)
@@ -306,10 +313,14 @@ class MainWin(QtWidgets.QWidget):
     def on_pbn_delete_clicked(self):
         removed_keys = 0
         removed_loc = 0
-        for item in self.ui.tbw_words.selectedItems():
+        items = self.ui.tbw_words.selectedItems()
+        if len(items) == 0:
+            self.ui.lb_state.setText("No items selected.")
+            return
+
+        for item in items:
             key = self._row_keys_map[item.row()]
             if item.column() == 0:
-                # key = item.text()
                 if key in self._dictionary:
                     self._dictionary.pop(key)
                     removed_keys += 1
@@ -320,7 +331,8 @@ class MainWin(QtWidgets.QWidget):
 
         self._read_dict()
         self.ui.lb_state.setText(f"Removed {removed_keys} keys and {removed_loc} locale entries.")
-        self._file_changed()
+        if not (removed_keys == 0 and removed_loc == 0):
+            self._file_changed()
 
 
 def main():
