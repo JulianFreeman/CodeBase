@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="/">
+    <file>myapp.ico</file>
+  </qresource>
+  <qresource prefix="/translations">
+    <file>myapp_jp.qm</file>
+    <file>myapp_zh_cn.qm</file>
+  </qresource>
+</RCC>
