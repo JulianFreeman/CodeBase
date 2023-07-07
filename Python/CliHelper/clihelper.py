@@ -27,8 +27,11 @@
 
 from __future__ import annotations
 from typing import Callable, Optional
+from tr import tr, tr_init, tr_set, lang_map
 
 version = (1, 3, 20230705)
+
+tr_init("clihelper.json")
 
 
 def request_input(prompt_msg: str,
@@ -56,22 +59,22 @@ def request_input(prompt_msg: str,
     :return: 用户输入值和一个布尔值组成的元组，后者标记是否成功获取请求（非退出或者不符合要求）
     """
     while True:
-        print(prompt_msg, end="")
+        print(tr(prompt_msg), end="")
         # 检查默认值
         if has_default_val:
-            print(f" (Default [{default_val}]): ", end="")
+            print(tr(" (Default [{0}]): ").format(default_val), end="")
             input_val = input() or default_val
         else:
-            input_val = input(": ")
+            input_val = input(tr(": "))
         # 检查退出值
         if has_quit_val and input_val == quit_val:
-            print("Quit.")
+            print(tr("Quit."))
             return "", False
         # 确认环节
         if need_confirm:
             # 这里是一个递归调用，所以 need_confirm 不能是 True，否则就会没玩没了地确认了
             result, state = request_input(
-                f"Do you confirm the value [{input_val}] (yes/no)",
+                tr("Do you confirm the value [{0}] (yes/no)").format(input_val),
                 has_default_val=False, has_quit_val=False,
                 ask_again=True, need_confirm=False,
                 check_func=lambda x: x.lower() in ("y", "yes", "n", "no")
@@ -82,9 +85,9 @@ def request_input(prompt_msg: str,
 
         # 如果有检查函数，且当前输入不符合要求
         if check_func is not None and not check_func(input_val):
-            print(err_msg, end=" ")
+            print(tr(err_msg), end=" ")
             if ask_again:
-                print("Please enter again.")
+                print(tr("Please enter again."))
                 continue
             else:
                 print()
@@ -119,7 +122,7 @@ class CliHelper(object):
         @staticmethod
         def _default_func():
             """用户没有指定执行函数时执行的默认函数"""
-            print("No function")
+            print(tr("No function"))
 
     # 返回上级菜单的执行函数的返回值
     _RETURN_CODE = 0xbabe
@@ -135,9 +138,12 @@ class CliHelper(object):
                  wall_char: str = " ",
                  serial_marker: str = ". ",
                  draw_menu_again: bool = False,
-                 show_version: bool = True):
+                 lang_set: tuple[str, ...] | None = None,
+                 show_version: bool = True,
+                 ):
 
         self._root = self._OptionNode("Main Menu")
+        self._options_repo = {}  # type: dict[CliHelper._OptionNode, str]
 
         self._left_padding = left_padding
         self._right_padding = right_padding
@@ -147,9 +153,19 @@ class CliHelper(object):
         self._wall_char = wall_char
         self._serial_marker = serial_marker
         self._draw_menu_again = draw_menu_again
+        self._lang_set = lang_set if lang_set is not None else ("en_us", )
 
         if show_version:
             print(f"CliHelper v{version[0]}.{version[1]} ({version[-1]})\n")
+        if lang_set:
+            tr_set(lang_set[0])
+
+    def _set_language(self, locale: str):
+        tr_set(locale)
+        for opt in self._options_repo:
+            opt.title = tr(self._options_repo[opt])
+
+        print(tr("Language changed to {0}").format(lang_map[locale]))
 
     @staticmethod
     def _get_max_length_of_option_titles(p_option: _OptionNode) -> int:
@@ -204,8 +220,9 @@ class CliHelper(object):
         :param p_option: 当前菜单选项的父选项节点
         :return: 用户选择的选项节点或 None
         """
+        print()
         choice, state = request_input(
-            "\nYour option", "No such option.",
+            "Your option", "No such option.",
             has_default_val=False, has_quit_val=False,
             check_func=lambda x: x.isdigit() and 1 <= int(x) <= len(p_option.children),
             ask_again=False, need_confirm=False
@@ -274,8 +291,8 @@ class CliHelper(object):
             parent = self._root
         # 如果在此父选项下创建了新的选项，该父选项会成为下一级的菜单入口
         # 此处进行后缀标记
-        if not parent.title.endswith(" [d]"):
-            parent.title = f"{parent.title} [d]"
+        # if not parent.title.endswith(" [d]"):
+        #     parent.title = f"{parent.title} [d]"
 
         option = self._OptionNode(title, exec_func, args, kwargs)
         parent.children.append(option)
@@ -284,6 +301,8 @@ class CliHelper(object):
         parent.exec_func = self._enter_next_level
         # “进入下一级菜单”这个执行函数的参数就是其选项本身
         parent.args = (parent, )
+
+        self._options_repo[option] = title
 
         return option
 
@@ -306,6 +325,17 @@ class CliHelper(object):
         if p_option is None:
             p_option = self._root
         self.add_option(p_option, title="[Exit]", exec_func=exit, args=(0,))
+
+    def add_lang_set_option(self, p_option: _OptionNode | None = None):
+        if p_option is None:
+            p_option = self._root
+        lang_opt = self.add_option(p_option, title="Language")
+        self.add_return_option(lang_opt)
+        for a in self._lang_set:
+            if a not in lang_map:
+                continue
+            self.add_option(lang_opt, title=tr(lang_map[a]), exec_func=self._set_language, args=(a, ))
+        self.add_exit_option(lang_opt)
 
     def start_loop(self):
         """开启主循环"""

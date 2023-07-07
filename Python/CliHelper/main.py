@@ -11,10 +11,11 @@ def new_folder(name):
 
 
 def test_helper():
-    c = CliHelper(right_padding=20, draw_menu_again=False)
+    c = CliHelper(right_padding=20, draw_menu_again=False, lang_set=("en_us", "zh_cn"))
     n = c.add_option(title="New")
     c.add_option(title="Open File", exec_func=open_file)
     c.add_option(title="Save")
+    c.add_lang_set_option()
     c.add_exit_option()
 
     c.add_return_option(n)

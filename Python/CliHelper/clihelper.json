@@ -1,0 +1,59 @@
+{
+    "Invalid value.": {
+        "zh_cn": "无效的值。"
+    },
+    " (Default [{0}]): ": {
+        "zh_cn": "（默认值【{0}】）："
+    },
+    ": ": {
+        "zh_cn": "："
+    },
+    "Quit.": {
+        "zh_cn": "退出。"
+    },
+    "Do you confirm the value [{0}] (yes/no)": {
+        "zh_cn": "是否确认值为【{0}】(yes/no)"
+    },
+    "Please enter again.": {
+        "zh_cn": "请重新输入。"
+    },
+    "Untitled Option": {
+        "zh_cn": "未命名选项"
+    },
+    "No function": {
+        "zh_cn": "没有命令"
+    },
+    "Your option": {
+        "zh_cn": "你选择的选项"
+    },
+    "No such option.": {
+        "zh_cn": "没有该选项。"
+    },
+    " [d]": {
+        "zh_cn": "【夹】"
+    },
+    "[Back]": {
+        "zh_cn": "【返回】"
+    },
+    "[Exit]": {
+        "zh_cn": "【退出】"
+    },
+    "New": {
+        "zh_cn": "新建"
+    },
+    "Open File": {
+        "zh_cn": "打开文件"
+    },
+    "Save": {
+        "zh_cn": "保存"
+    },
+    "Language": {
+        "zh_cn": "语言"
+    },
+    "English (US)": {
+        "zh_cn": "英语（美）"
+    },
+    "Simplified Chinese": {
+        "zh_cn": "简体中文"
+    }
+}
