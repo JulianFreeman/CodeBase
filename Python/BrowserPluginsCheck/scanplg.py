@@ -1,6 +1,7 @@
 # code: utf8
 import os
 import json
+import sys
 from pathlib import Path
 from PySide6 import QtCore
 
@@ -94,13 +95,29 @@ def _handle_single_profile(profile_path: Path, ext_db: dict[str, dict], plg_db: 
 
 def scan_google_plugins(browser: str) -> dict[str, dict]:
     ext_db = {}  # type: dict[str, dict]
+    plat = sys.platform
     user_path = os.path.expanduser("~")
     if browser == "Chrome":
-        data_path = Path(user_path, "AppData", "Local", "Google", "Chrome", "User Data")
+        if plat == "win32":
+            data_path = Path(user_path, "AppData", "Local", "Google", "Chrome", "User Data")
+        elif plat == "darwin":
+            data_path = Path(user_path, "Library", "Application Support", "Google", "Chrome")
+        else:
+            return {}
     elif browser == "Edge":
-        data_path = Path(user_path, "AppData", "Local", "Microsoft", "Edge", "User Data")
+        if plat == "win32":
+            data_path = Path(user_path, "AppData", "Local", "Microsoft", "Edge", "User Data")
+        elif plat == "darwin":
+            data_path = Path(user_path, "Library", "Application Support", "Microsoft Edge")
+        else:
+            return {}
     elif browser == "Brave":
-        data_path = Path(user_path, "AppData", "Local", "BraveSoftware", "Brave-Browser", "User Data")
+        if plat == "win32":
+            data_path = Path(user_path, "AppData", "Local", "BraveSoftware", "Brave-Browser", "User Data")
+        elif plat == "darwin":
+            data_path = Path(user_path, "Library", "Application Support", "BraveSoftware", "Brave-Browser")
+        else:
+            return {}
     else:
         return {}
 

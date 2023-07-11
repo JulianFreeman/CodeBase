@@ -2,6 +2,10 @@
 
 # Change log
 #
+# v1.0
+# 1. 支持 Mac 系统
+# 2. 其他微调
+#
 # v0.1
 # 1. 只支持 Windows 系统
 # 2. 只支持 Chrome，Edge，Brave 浏览器
@@ -24,7 +28,21 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from scanplg import scan_google_plugins
 import brwplgc_rc
 
-version = (0, 1, 20230711)
+version = (1, 0, 20230711)
+
+
+default_browser_exec = {
+    "win32": {
+        "chrome": r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        "edge": r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        "brave": r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+    },
+    "darwin": {
+        "chrome": r"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "edge": r"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+        "brave": r"/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+    },
+}
 
 
 def _change_font(widget: QtWidgets.QWidget, family: str, size: int, bold=True):
@@ -198,16 +216,17 @@ class ShowProfilesWin(QtWidgets.QDialog):
         self.lw_profiles.addItems(profiles)
 
     def on_pbn_open_clicked(self):
+        plat = sys.platform
         settings = QtCore.QSettings("JnPrograms", "BPC")
         chrome_exec = settings.value("chrome_exec", "")  # type: str | object
         if len(chrome_exec) == 0 or not Path(chrome_exec).exists():
-            chrome_exec = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+            chrome_exec = default_browser_exec[plat]["chrome"]
         edge_exec = settings.value("edge_exec", "")  # type: str | object
         if len(edge_exec) == 0 or not Path(edge_exec).exists():
-            edge_exec = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+            edge_exec = default_browser_exec[plat]["edge"]
         brave_exec = settings.value("brave_exec", "")  # type: str | object
         if len(brave_exec) == 0 or not Path(brave_exec).exists():
-            brave_exec = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+            brave_exec = default_browser_exec[plat]["brave"]
 
         profiles = self.lw_profiles.selectedItems()
         if self._current_browser == "Chrome":
@@ -252,7 +271,7 @@ class MainWin(QtWidgets.QWidget):
         _change_font(self.cmbx_browsers, "DengXian", 12)
         self.cmbx_browsers.setStyleSheet("""
         #cmbx_browsers {
-            padding: 6px 8px;
+            padding: 8px 10px;
             border-radius: 4px;
             border: 2px solid #9EA2AB;
         }
@@ -274,10 +293,6 @@ class MainWin(QtWidgets.QWidget):
         }
         #cmbx_browsers:down-arrow {
             image: url(:/imgs/chevron-down-outline_16.png);
-        }
-        #cmbx_browsers QAbstractItemView {
-            border-radius: 2px;
-            border: 2px solid #9EA2AB;
         }
         """)
 
@@ -434,7 +449,7 @@ class MainWin(QtWidgets.QWidget):
 
     @staticmethod
     def _create_show_button(window: QtWidgets.QWidget, obj_name: str, ids: str,
-                            family="DengXian", size=12, vpad=4, hpad=10, rad=4, bw=2) -> PushButtonWithId:
+                            family="DengXian", size=12, vpad=8, hpad=10, rad=4, bw=2) -> PushButtonWithId:
         pbn_s = PushButtonWithId(ids, window)
         pbn_s.setObjectName(obj_name)
         pbn_s.setText("显示用户")
@@ -457,7 +472,6 @@ class MainWin(QtWidgets.QWidget):
         }}
         """)
         pbn_s.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
-        pbn_s.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Expanding)
         pbn_s.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
         return pbn_s
 
