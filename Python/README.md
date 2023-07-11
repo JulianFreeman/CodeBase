@@ -17,3 +17,7 @@ PySide6 应用模板，重点在于支持多语言。
 # myrsa
 
 一个自制的简易 RSA 加解密工具。
+
+# Browser Plugins Check
+
+一个检查浏览器扩展的工具。

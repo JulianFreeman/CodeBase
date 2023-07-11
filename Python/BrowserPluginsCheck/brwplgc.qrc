@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="/">
+    <file>imgs/Franksouza183-Fs-Mimetypes-extension.16.png</file>
+    <file>imgs/Dtafalonso-Android-L-Chrome.32.png</file>
+    <file>imgs/Dtafalonso-Win-10x-Edge.32.png</file>
+    <file>imgs/Papirus-Team-Papirus-Apps-Brave.32.png</file>
+    <file>imgs/chevron-down-outline_16.png</file>
+  </qresource>
+</RCC>
