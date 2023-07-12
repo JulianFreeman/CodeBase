@@ -2,6 +2,9 @@
 
 # Change log
 #
+# v1.1
+# 1. 增加安全状态提示
+#
 # v1.0
 # 1. 支持 Mac 系统
 # 2. 其他微调
@@ -28,7 +31,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from scanplg import scan_google_plugins
 import brwplgc_rc
 
-version = (1, 0, 20230711)
+version = (1, 1, 20230712)
 
 
 default_browser_exec = {
@@ -364,6 +367,7 @@ class MainWin(QtWidgets.QWidget):
             lb_icon = self._create_icon_label(wg_line, ext_db[p]["icon"])
             lb_name = self._create_name_label(wg_line, ext_db[p]["name"])
             lb_status = self._create_status_label(wg_line, status_map[ext_db[p]["safe"]])
+            lb_status.setToolTip(ext_db[p]["note"])
             pbn_show = self._create_show_button(wg_line, f"pbn_show_{i}", p)
             pbn_show.clicked_with_id.connect(self.on_pbn_show_n_clicked_with_id)
 

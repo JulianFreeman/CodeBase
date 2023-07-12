@@ -53,6 +53,7 @@ def _handle_single_extension(extension_path: Path, profile_id: str, profile_name
         else:
             icon = ""
         safe = None
+        note = ""
 
         if ext_id not in ext_db:
             ext_db.setdefault(ext_id, {})
@@ -60,12 +61,14 @@ def _handle_single_extension(extension_path: Path, profile_id: str, profile_name
         ext_info = ext_db[ext_id]
 
         if ext_id in plg_db:
-            name = plg_db[ext_id]["name"]
-            safe = plg_db[ext_id]["safe"]
+            name = plg_db[ext_id].get("name", name)
+            safe = plg_db[ext_id].get("safe", safe)
+            note = plg_db[ext_id].get("note", note)
 
         ext_info["name"] = name
         ext_info["icon"] = icon
         ext_info["safe"] = safe
+        ext_info["note"] = note
 
         if "profiles" not in ext_info:
             ext_info.setdefault("profiles", [])
