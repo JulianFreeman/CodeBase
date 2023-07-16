@@ -274,7 +274,7 @@ class MainWin(QtWidgets.QWidget):
     def on_cmbx_browsers_current_index_changed(self, index: int):
         self._bmx_db, self._bmx_mp = scan_bookmarks(_BROWSERS[index])
         self.ui.lw_bookmarks.clear()
-        self.ui.lw_bookmarks.addItems(self._bmx_mp)
+        self.ui.lw_bookmarks.addItems(list(self._bmx_mp.keys()))
         self.ui.lne_filter.clear()
 
     def on_pbn_refresh_clicked(self):
