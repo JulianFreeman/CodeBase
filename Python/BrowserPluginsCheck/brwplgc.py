@@ -2,6 +2,9 @@
 
 # Change log
 #
+# v1.2
+# 1. 浏览器用户名称的显示更加准确
+#
 # v1.1
 # 1. 增加安全状态提示
 #
@@ -31,7 +34,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from scanplg import scan_google_plugins
 import brwplgc_rc
 
-version = (1, 1, 20230712)
+version = (1, 2, 20230720)
 
 
 default_browser_exec = {

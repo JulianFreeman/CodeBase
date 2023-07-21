@@ -76,24 +76,29 @@ def _handle_single_extension(extension_path: Path, profile_id: str, profile_name
         ext_info["profiles"].append(f"{profile_id}%{profile_name}")
 
 
-def _handle_single_profile(profile_path: Path, ext_db: dict[str, dict], plg_db: dict):
+def _handle_single_profile(profile_path: Path, ext_db: dict[str, dict], plg_db: dict, lst_db: dict):
     extension_path = Path(profile_path, "Extensions")
     if not extension_path.exists():
         return
 
-    preferences_path = Path(profile_path, "Preferences")
-    if preferences_path.exists():
-        with open(preferences_path, "r", encoding="utf8") as f:
-            pref = json.load(f)
-        if "profile" in pref and "name" in pref["profile"]:
-            profile_name = pref["profile"]["name"]
+    profile_id = profile_path.name
+
+    try:
+        profile_name = lst_db["profile"]["info_cache"][profile_id]["shortcut_name"]
+    except KeyError:
+        preferences_path = Path(profile_path, "Preferences")
+        if preferences_path.exists():
+            with open(preferences_path, "r", encoding="utf8") as f:
+                pref = json.load(f)
+            if "profile" in pref and "name" in pref["profile"]:
+                profile_name = pref["profile"]["name"]
+            else:
+                profile_name = ""
         else:
             profile_name = ""
-    else:
-        profile_name = ""
 
     for e in extension_path.glob("*"):
-        _handle_single_extension(e, profile_path.name, profile_name, ext_db, plg_db)
+        _handle_single_extension(e, profile_id, profile_name, ext_db, plg_db)
 
 
 def scan_google_plugins(browser: str) -> dict[str, dict]:
@@ -127,6 +132,13 @@ def scan_google_plugins(browser: str) -> dict[str, dict]:
     if not data_path.exists():
         return {}
 
+    local_state_path = Path(data_path, "Local State")
+    if not local_state_path.exists():
+        lst_db = {}
+    else:
+        with open(local_state_path, "r", encoding="utf8") as f:
+            lst_db = json.load(f)
+
     profile_paths = []
     profile_def = Path(data_path, "Default")
     if profile_def.exists():
@@ -136,6 +148,6 @@ def scan_google_plugins(browser: str) -> dict[str, dict]:
     plg_db = _read_plg_db()
 
     for p in profile_paths:
-        _handle_single_profile(p, ext_db, plg_db)
+        _handle_single_profile(p, ext_db, plg_db, lst_db)
 
     return ext_db
