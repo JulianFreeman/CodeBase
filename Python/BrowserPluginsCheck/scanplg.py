@@ -86,16 +86,19 @@ def _handle_single_profile(profile_path: Path, ext_db: dict[str, dict], plg_db: 
     try:
         profile_name = lst_db["profile"]["info_cache"][profile_id]["shortcut_name"]
     except KeyError:
-        preferences_path = Path(profile_path, "Preferences")
-        if preferences_path.exists():
-            with open(preferences_path, "r", encoding="utf8") as f:
-                pref = json.load(f)
-            if "profile" in pref and "name" in pref["profile"]:
-                profile_name = pref["profile"]["name"]
+        try:
+            profile_name = lst_db["profile"]["info_cache"][profile_id]["name"]
+        except KeyError:
+            preferences_path = Path(profile_path, "Preferences")
+            if preferences_path.exists():
+                with open(preferences_path, "r", encoding="utf8") as f:
+                    pref = json.load(f)
+                if "profile" in pref and "name" in pref["profile"]:
+                    profile_name = pref["profile"]["name"]
+                else:
+                    profile_name = ""
             else:
                 profile_name = ""
-        else:
-            profile_name = ""
 
     for e in extension_path.glob("*"):
         _handle_single_extension(e, profile_id, profile_name, ext_db, plg_db)
