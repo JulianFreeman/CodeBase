@@ -25,3 +25,7 @@ PySide6 应用模板，重点在于支持多语言。
 # Bookmarks Check
 
 一个检查浏览器书签的工具。
+
+# Browser Settings Check
+
+一个快速检查并设置浏览器设置的工具。
