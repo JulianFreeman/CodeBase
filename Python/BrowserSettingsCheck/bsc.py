@@ -3,6 +3,9 @@
 #
 # Change log
 #
+# v1.1
+# 1. 增加显示当前用户名
+#
 # v1.0
 # 1. 支持 Edge，Brave；浏览器用户运行状态下应用无效
 #
@@ -27,7 +30,7 @@ from PySide6 import QtWidgets, QtCore, QtGui, QtSql
 
 import bsc_rc
 
-version = (1, 0, 20230722)
+version = (1, 1, 20230723)
 
 _BROWSERS = ["Chrome", "Edge", "Brave"]
 
@@ -148,13 +151,17 @@ class UiMainWin(object):
         self.lb_browser = QtWidgets.QLabel("切换浏览器：", window)
         self.cmbx_browser = QtWidgets.QComboBox(window)
         self.cmbx_browser.addItems(_BROWSERS)
+        self.lb_profile = QtWidgets.QLabel("当前用户名：", window)
+        self.lne_profile = QtWidgets.QLineEdit(window)
+        self.lne_profile.setReadOnly(True)
         self.pbn_refresh = QtWidgets.QPushButton("刷新", window)
         self.pbn_apply = QtWidgets.QPushButton("应用", window)
         self.pbn_apply_all = QtWidgets.QPushButton("应用所有", window)
 
         self.hly_top.addWidget(self.lb_browser)
         self.hly_top.addWidget(self.cmbx_browser)
-        self.hly_top.addStretch(1)
+        self.hly_top.addWidget(self.lb_profile)
+        self.hly_top.addWidget(self.lne_profile)
         self.hly_top.addWidget(self.pbn_refresh)
         self.hly_top.addWidget(self.pbn_apply)
         self.hly_top.addWidget(self.pbn_apply_all)
@@ -465,9 +472,19 @@ class MainWin(QtWidgets.QWidget):
         self.update_profile_settings(self.ui.cmbx_browser.currentText(), item.text())
 
     def on_lw_profiles_item_selection_changed(self):
-        self.update_profile_settings(
-            self.ui.cmbx_browser.currentText(),
-            self.ui.lw_profiles.currentItem().text())
+        browser = self.ui.cmbx_browser.currentText()
+        profile = self.ui.lw_profiles.currentItem().text()
+        _, profile_dic = self._get_browser_profiles(browser)
+        if profile_dic is None:
+            name = "[未找到]"
+        else:
+            name = get_with_chained_keys(profile_dic, [profile, "shortcut_name"])
+            if name is None:
+                name = get_with_chained_keys(profile_dic, [profile, "name"])
+            name = "[未找到]" if name is None else name
+
+        self.ui.lne_profile.setText(name)
+        self.update_profile_settings(browser, profile)
 
     def on_cmbx_browsers_current_text_changed(self, text: str):
         self.refresh_profiles(text)
@@ -501,19 +518,19 @@ class MainWin(QtWidgets.QWidget):
             change_color(self.ui.wg_tab_brave, QtCore.Qt.GlobalColor.black)
 
     @staticmethod
-    def _get_browser_profiles(browser: str) -> list | None:
+    def _get_browser_profiles(browser: str) -> tuple[list, dict] | tuple[None, None]:
         lst_db = get_local_state_db(browser)
         profiles_dic = get_with_chained_keys(lst_db, ["profile", "info_cache"])
         if profiles_dic is None:
-            return None
+            return None, None
 
         profiles = list(profiles_dic.keys())
         profiles.sort(key=lambda x: 0 if x == "Default" else int(x.split(" ")[1]))
 
-        return profiles
+        return profiles, profiles_dic
 
     def refresh_profiles(self, browser: str):
-        profiles = self._get_browser_profiles(browser)
+        profiles, _ = self._get_browser_profiles(browser)
         if profiles is None:
             QtWidgets.QMessageBox.critical(
                 self, "错误",
@@ -780,7 +797,7 @@ class MainWin(QtWidgets.QWidget):
             cur_profile = item.text()
 
         browser = self.ui.cmbx_browser.currentText()
-        profiles = self._get_browser_profiles(browser)
+        profiles, _ = self._get_browser_profiles(browser)
 
         save_pass = self.ui.cbx_save_pass.checkState() == QtCore.Qt.CheckState.Checked
         auto_signin = self.ui.cbx_auto_signin.checkState() == QtCore.Qt.CheckState.Checked
