@@ -1,17 +1,6 @@
 # code: utf8
-
-# Change Log:
-#
-# v0.1 粗糙的命令行英文版本，能用
-#
-
-import os
-import sys
 from html import escape
-from pathlib import Path
-
 from scan_bookmarks import scan_bookmarks
-from clihelper import CliHelper, request_input
 
 
 def args_match(args: tuple, count: int, a_types: tuple) -> bool:
@@ -119,25 +108,7 @@ def make_xml(group, filepath):
 </KeePassFile>""")
 
 
-def add_browser_prefix(browser, filepath):
-    filepath_p = Path(filepath)
-    filepath_pp = filepath_p.parent
-    filename = filepath_p.name
-    new_filepath = str(Path(filepath_pp, f"{browser}_{filename}"))
-
-    return new_filepath
-
-
-def xml2kps(kps_cli_path, xml_filepath, filepath):
-    cmd = f""""{kps_cli_path}" import {xml_filepath} {filepath}"""
-    os.system(cmd)
-    os.remove(xml_filepath)
-
-
-def bm2xml(browser, kps_cli_path, xml_filepath, filepath):
-    new_xml_filepath = add_browser_prefix(browser, xml_filepath)
-    new_filepath = add_browser_prefix(browser, filepath)
-
+def bm2xml(browser, xml_filepath):
     bm_db, _ = scan_bookmarks(browser)
     root = Group("Bookmarks")
     for url in bm_db:
@@ -156,57 +127,4 @@ def bm2xml(browser, kps_cli_path, xml_filepath, filepath):
             i += 1
         ss_g.add_entry(escape(name), escape(url))
 
-    make_xml(root, new_xml_filepath)
-    print("Generating the .kdbx file...")
-    xml2kps(kps_cli_path, new_xml_filepath, new_filepath)
-    print(f"\nSuccessfully export the bookmarks of [{browser}] to [{new_filepath}].")
-
-    return CliHelper._RETURN_CODE
-
-
-def check_filepath(filepath):
-    p = Path(filepath)
-    pp = p.parent
-    return pp.is_dir() and not p.exists()
-
-
-def main():
-    filepath, b = request_input(
-        "Enter the file path to save the .kdbx",
-        "The path is invalid or already exists.",
-        check_func=check_filepath, ask_again=True,
-    )
-    if b is False:
-        print("Quit.")
-        sys.exit(0)
-
-    if not filepath.endswith(".kdbx"):
-        filepath += ".kdbx"
-    xml_filepath = filepath + ".xml"
-
-    plat = sys.platform
-    default_kps_cli_path = {
-        "win32": r"C:\Program Files\KeePassXC\keepassxc-cli.exe",
-        "darwin": r"/Applications/KeePassXC.app/Contents/MacOS/keepassxc-cli"
-    }
-
-    kps_cli_path, b = request_input(
-        "Enter the path of keepassxc_cli",
-        "keepassxc_cli file does not detected.",
-        has_default_val=True,
-        default_val=default_kps_cli_path[plat],
-        check_func=lambda x: Path(x).exists(), ask_again=True,
-    )
-    if b is False:
-        print("Quit.")
-        sys.exit(0)
-
-    clihelper = CliHelper(show_version=False)
-    clihelper.add_option(title="Chrome", exec_func=bm2xml, args=("Chrome", kps_cli_path, xml_filepath, filepath))
-    clihelper.add_option(title="Edge", exec_func=bm2xml, args=("Edge", kps_cli_path, xml_filepath, filepath))
-    clihelper.add_option(title="Brave", exec_func=bm2xml, args=("Brave", kps_cli_path, xml_filepath, filepath))
-    clihelper.start_loop()
-
-
-if __name__ == '__main__':
-    main()
+    make_xml(root, xml_filepath)
