@@ -110,7 +110,7 @@ def make_xml(group, filepath):
 
 
 def is_google_drive_url(url):
-    return urlparse(url).netloc == "docs.google.com"
+    return urlparse(url).netloc in ("docs.google.com", "drive.google.com")
 
 
 def bm2xml(browser, xml_filepath, google_only):
