@@ -2,13 +2,12 @@
 
 # Change Log:
 #
+# v1.2:
+# 1. 增加仅导出谷歌网盘链接
+#
 # v1.1:
 # 1. 支持 MacOS
 # 2. 修复 bug
-#
-# v1.0 图形界面版本
-#
-# v0.1 粗糙的命令行英文版本，能用
 #
 
 #########################################################################
@@ -31,7 +30,7 @@ from bm2kps import bm2xml
 
 import ebk_rc
 
-version = [1, 1, 20230725]
+version = [1, 2, 20230725]
 
 _BROWSERS = ["Chrome", "Edge", "Brave"]
 
@@ -62,9 +61,12 @@ class UiMainWin(object):
         self.lb_browser = QtWidgets.QLabel("切换浏览器：", self.gbx_config)
         self.cmbx_browser = QtWidgets.QComboBox(self.gbx_config)
         self.cmbx_browser.addItems(_BROWSERS)
+        self.cbx_google_only = QtWidgets.QCheckBox("仅导出谷歌网盘链接", self.gbx_config)
+        self.cbx_google_only.setChecked(True)
         self.hly_top_gbx_config.addWidget(self.lb_browser)
         self.hly_top_gbx_config.addWidget(self.cmbx_browser)
         self.hly_top_gbx_config.addStretch(1)
+        self.hly_top_gbx_config.addWidget(self.cbx_google_only)
 
         self.hln_top = QtWidgets.QFrame(self.gbx_config)
         self.hln_top.setFrameShape(QtWidgets.QFrame.Shape.HLine)
@@ -209,6 +211,7 @@ class MainWin(QtWidgets.QWidget):
         cli_path = self.ui.lne_cli_path.text()
         save_xml = self.ui.cbx_keep_xml.checkState() == QtCore.Qt.CheckState.Checked
         clear_pass = self.ui.cbx_clear_pass.checkState() == QtCore.Qt.CheckState.Checked
+        google_only = self.ui.cbx_google_only.checkState() == QtCore.Qt.CheckState.Checked
 
         if len(password) == 0:
             QtWidgets.QMessageBox.critical(self, "错误", "没有指定 KeePass 数据库密码。")
@@ -246,7 +249,7 @@ class MainWin(QtWidgets.QWidget):
         self.prc_kpx_import.setArguments(arguments)
 
         self.ui.txe_output.append("正在导出书签……")
-        bm2xml(browser, xml_path)
+        bm2xml(browser, xml_path, google_only)
         self.ui.txe_output.append("正在生成数据库文件……")
         self.prc_echo_pass.start()
         self.prc_kpx_import.start()

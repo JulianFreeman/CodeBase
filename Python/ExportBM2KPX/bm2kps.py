@@ -1,5 +1,6 @@
 # code: utf8
 from html import escape
+from urllib.parse import urlparse
 from scan_bookmarks import scan_bookmarks
 
 
@@ -108,10 +109,17 @@ def make_xml(group, filepath):
 </KeePassFile>""")
 
 
-def bm2xml(browser, xml_filepath):
+def is_google_drive_url(url):
+    return urlparse(url).netloc == "docs.google.com"
+
+
+def bm2xml(browser, xml_filepath, google_only):
     bm_db, _ = scan_bookmarks(browser)
     root = Group("Bookmarks")
     for url in bm_db:
+        if google_only and not is_google_drive_url(url):
+            continue
+
         info = bm_db[url]
         name = info["name"]
         prof, addr = info["profiles_pos"][0]  # type: str, str
