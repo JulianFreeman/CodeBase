@@ -2,6 +2,10 @@
 
 # Change Log:
 #
+# v1.1:
+# 1. 支持 MacOS
+# 2. 修复 bug
+#
 # v1.0 图形界面版本
 #
 # v0.1 粗糙的命令行英文版本，能用
@@ -27,7 +31,7 @@ from bm2kps import bm2xml
 
 import ebk_rc
 
-version = [1, 0, 20230725]
+version = [1, 1, 20230725]
 
 _BROWSERS = ["Chrome", "Edge", "Brave"]
 
@@ -224,24 +228,22 @@ class MainWin(QtWidgets.QWidget):
 
         xml_path = kpx_path + ".xml"
         if self._kpx_ver >= (2, 7, 0):
-            arguments = ["import", "-p", f'"{xml_path}"', f'"{kpx_path}"']
+            arguments = ["import", "-p", xml_path, kpx_path]
         else:
-            arguments = ["import", f'"{xml_path}"', f'"{kpx_path}"']
+            arguments = ["import", xml_path, kpx_path]
 
         match sys.platform:
             case "win32":
                 self.prc_echo_pass.setProgram("powershell")
-                self.prc_echo_pass.setNativeArguments(" ".join(["echo", f"{password},{password}"]))
-                self.prc_kpx_import.setProgram(cli_path)
-                self.prc_kpx_import.setNativeArguments(" ".join(arguments))
+                self.prc_echo_pass.setArguments(["echo", f"{password},{password}"])
             case "darwin":
-                self.prc_echo_pass.setProgram("echo")
-                self.prc_echo_pass.setArguments(["-e", f"{password}\\n{password}"])
-                self.prc_kpx_import.setProgram(cli_path)
-                self.prc_kpx_import.setArguments(arguments)
+                self.prc_echo_pass.setProgram("bash")
+                self.prc_echo_pass.setArguments(["-c", f'echo -e "{password}\\n{password}"'])
             case _:
                 QtWidgets.QMessageBox.critical(self, "错误", f"不支持的操作系统：{sys.platform}")
                 return
+        self.prc_kpx_import.setProgram(cli_path)
+        self.prc_kpx_import.setArguments(arguments)
 
         self.ui.txe_output.append("正在导出书签……")
         bm2xml(browser, xml_path)
@@ -260,7 +262,7 @@ class MainWin(QtWidgets.QWidget):
     def on_prc_kpx_import_finished(self):
         out = self.prc_kpx_import.readAllStandardOutput().data().decode("utf8")
         self.ui.txe_output.append(out)
-        self.ui.txe_output.append("成功生成数据库文件。\n")
+        self.ui.txe_output.append("结束。\n")
 
 
 def main():
