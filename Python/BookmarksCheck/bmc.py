@@ -2,6 +2,9 @@
 
 # Change log
 #
+# v1.1
+# 1. 支持删除书签
+#
 # v1.0
 # 1. 初始版本
 #
@@ -19,7 +22,7 @@ import sys
 from pathlib import Path
 
 from PySide6 import QtWidgets, QtCore, QtGui
-from scan_bookmarks import scan_bookmarks
+from scan_bookmarks import scan_bookmarks, delete_bookmark
 
 import bmc_rc
 
@@ -173,10 +176,16 @@ class ShowProfilesWin(QtWidgets.QDialog):
         self.lw_profiles.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.vly_m.addWidget(self.lw_profiles)
 
+        self.hly_bot = QtWidgets.QHBoxLayout()
         self.pbn_open = QtWidgets.QPushButton("打开", self)
-        self.vly_m.addWidget(self.pbn_open)
+        self.pbn_delete_all = QtWidgets.QPushButton("删除所有", self)
+        self.hly_bot.addStretch(1)
+        self.hly_bot.addWidget(self.pbn_open)
+        self.hly_bot.addWidget(self.pbn_delete_all)
+        self.vly_m.addLayout(self.hly_bot)
 
         self.pbn_open.clicked.connect(self.on_pbn_open_clicked)
+        self.pbn_delete_all.clicked.connect(self.on_pbn_delete_all_clicked)
 
         self._process = QtCore.QProcess(self)
         self._current_browser = browser
@@ -215,6 +224,20 @@ class ShowProfilesWin(QtWidgets.QDialog):
             pi, _ = p.text().split(" - ", 1)  # type: str, str
             self._process.startCommand(cmd.format(pi.strip()))
             self._process.waitForFinished(10000)
+
+    def on_pbn_delete_all_clicked(self):
+        s, f = 0, 0
+        for i in range(self.lw_profiles.count()):
+            item = self.lw_profiles.item(i)
+            pi, _ = item.text().split(" - ", 1)  # type: str, str
+            r, _ = delete_bookmark(self._current_browser, pi.strip(), self.lne_url.text())
+            if r:
+                s += 1
+            else:
+                f += 1
+
+        QtWidgets.QMessageBox.information(self, "信息", f"成功删除 {s} 个，失败 {f} 个。")
+        self.accept()
 
 
 class UiMainWin(object):
