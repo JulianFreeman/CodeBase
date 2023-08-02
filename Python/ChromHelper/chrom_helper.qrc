@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="/">
+    <file>img/ebk_16.png</file>
+    <file>img/svg/ellipsis.svg</file>
+    <file>img/svg/eye.svg</file>
+    <file>img/svg/eye-off.svg</file>
+    <file>img/bmc_16.png</file>
+    <file>img/bsc_16.png</file>
+    <file>img/bpc_16.png</file>
+    <file>img/brave_32.png</file>
+    <file>img/chrome_32.png</file>
+    <file>img/edge_32.png</file>
+    <file>img/chrom_helper_64.png</file>
+  </qresource>
+</RCC>
