@@ -69,7 +69,7 @@ def get_x_in_profile_path(browser: str, profile: str, x: str, *, data_path: Path
 
 def get_preferences_path(browser: str, profile: str) -> Path | None:
     preferences_path = get_x_in_profile_path(browser, profile, "Preferences")
-    if preferences_path is None or not preferences_path.exists():
+    if preferences_path is None:
         return None
 
     return preferences_path
@@ -93,6 +93,36 @@ def overwrite_preferences_db(new_pref_db: dict, browser: str, profile: str) -> b
 
     with open(preferences_path, "w", encoding="utf8") as f:
         json.dump(new_pref_db, f)
+
+    return True
+
+
+def get_secure_preferences_path(browser: str, profile: str) -> Path | None:
+    secure_pref_path = get_x_in_profile_path(browser, profile, "Secure Preferences")
+    if secure_pref_path is None:
+        return None
+
+    return secure_pref_path
+
+
+def get_secure_preferences_db(browser: str, profile: str) -> dict:
+    secure_pref_path = get_secure_preferences_path(browser, profile)
+    if secure_pref_path is None:
+        return {}
+
+    with open(secure_pref_path, "r", encoding="utf8") as f:
+        s_pref_db = json.load(f)
+
+    return s_pref_db
+
+
+def overwrite_secure_preferences_db(new_s_pref_db: dict, browser: str, profile: str) -> bool:
+    secure_pref_path = get_secure_preferences_path(browser, profile)
+    if secure_pref_path is None:
+        return False
+
+    with open(secure_pref_path, "w", encoding="utf8") as f:
+        json.dump(new_s_pref_db, f)
 
     return True
 

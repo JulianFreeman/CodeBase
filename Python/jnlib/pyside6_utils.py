@@ -29,3 +29,20 @@ class PushButtonWithId(QtWidgets.QPushButton):
 
     def on_self_clicked(self):
         self.clicked_with_id.emit(self.ids)
+
+
+def accept_warning(widget: QtWidgets.QWidget, condition: bool,
+                   caption: str = "Warning", text: str = "Are you sure to continue?") -> bool:
+    if condition:
+        b = QtWidgets.QMessageBox.question(widget, caption, text)
+        if b == QtWidgets.QMessageBox.StandardButton.No:
+            return True
+    return False
+
+
+class HorizontalLine(QtWidgets.QFrame):
+
+    def __init__(self, parent: QtWidgets.QWidget | None = None):
+        super().__init__(parent)
+        self.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        self.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
