@@ -2,9 +2,11 @@
 import os
 import sys
 from pathlib import Path
-
 from PySide6 import QtWidgets, QtCore, QtGui
-from bm2kps import bm2xml
+
+from jnlib.pyside6_utils import HorizontalLine
+
+from bookmarks2kdbx import bm2xml
 
 
 class UiExportBookmarksWin(object):
@@ -40,9 +42,7 @@ class UiExportBookmarksWin(object):
         self.gly_top.addWidget(self.lne_cli_path, 2, 1)
         self.gly_top.addWidget(self.pbn_browse_cli_path, 2, 2)
 
-        self.hln_mid = QtWidgets.QFrame(window)
-        self.hln_mid.setFrameShape(QtWidgets.QFrame.Shape.HLine)
-        self.hln_mid.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.hln_mid = HorizontalLine(window)
         self.vly_m.addWidget(self.hln_mid)
 
         self.hly_bot = QtWidgets.QHBoxLayout()

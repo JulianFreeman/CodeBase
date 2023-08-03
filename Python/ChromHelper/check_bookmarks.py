@@ -1,90 +1,8 @@
 # code: utf8
-from pathlib import Path
 from PySide6 import QtWidgets, QtCore
 
-from jnlib.chromium_utils import get_exec_path
-
-from scan_bookmarks import scan_bookmarks, delete_bookmark
-
-
-class ShowProfilesWin(QtWidgets.QDialog):
-
-    def __init__(self, browser: str, parent: QtWidgets.QWidget | None = None):
-        super().__init__(parent)
-        self.resize(400, 360)
-
-        self.vly_m = QtWidgets.QVBoxLayout()
-        self.setLayout(self.vly_m)
-
-        self.lne_url = QtWidgets.QLineEdit(self)
-        self.lne_url.setReadOnly(True)
-        self.vly_m.addWidget(self.lne_url)
-
-        self.lw_profiles = QtWidgets.QListWidget(self)
-        self.lw_profiles.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
-        self.vly_m.addWidget(self.lw_profiles)
-
-        self.hly_bot = QtWidgets.QHBoxLayout()
-        self.pbn_open = QtWidgets.QPushButton("打开", self)
-        self.pbn_delete_all = QtWidgets.QPushButton("删除所有", self)
-        self.hly_bot.addStretch(1)
-        self.hly_bot.addWidget(self.pbn_open)
-        self.hly_bot.addWidget(self.pbn_delete_all)
-        self.vly_m.addLayout(self.hly_bot)
-
-        self.pbn_open.clicked.connect(self.on_pbn_open_clicked)
-        self.pbn_delete_all.clicked.connect(self.on_pbn_delete_all_clicked)
-
-        self._process = QtCore.QProcess(self)
-        self._current_browser = browser
-
-    def update_list(self, profiles: list[str, ...], url: str):
-        profiles.sort(key=lambda x: 0 if x.split(" ", 1)[0] == "Default" else int(x.split(" - ")[0].split(" ")[1]))
-
-        self.lw_profiles.clear()
-        self.lw_profiles.addItems(profiles)
-        self.lne_url.setText(url)
-
-    def on_pbn_open_clicked(self):
-        settings = QtCore.QSettings()
-        chrome_exec = settings.value("chrome_exec", "")  # type: str | object
-        if len(chrome_exec) == 0 or not Path(chrome_exec).exists():
-            chrome_exec = get_exec_path("chrome")
-        edge_exec = settings.value("edge_exec", "")  # type: str | object
-        if len(edge_exec) == 0 or not Path(edge_exec).exists():
-            edge_exec = get_exec_path("edge")
-        brave_exec = settings.value("brave_exec", "")  # type: str | object
-        if len(brave_exec) == 0 or not Path(brave_exec).exists():
-            brave_exec = get_exec_path("brave")
-
-        profiles = self.lw_profiles.selectedItems()
-        if self._current_browser == "Chrome":
-            cmd = rf'"{chrome_exec}" --profile-directory="{{0}}"'
-        elif self._current_browser == "Edge":
-            cmd = rf'"{edge_exec}" --profile-directory="{{0}}"'
-        elif self._current_browser == "Brave":
-            cmd = rf'"{brave_exec}" --profile-directory="{{0}}"'
-        else:
-            return
-
-        for p in profiles:
-            pi, _ = p.text().split(" - ", 1)  # type: str, str
-            self._process.startCommand(cmd.format(pi.strip()))
-            self._process.waitForFinished(10000)
-
-    def on_pbn_delete_all_clicked(self):
-        s, f = 0, 0
-        for i in range(self.lw_profiles.count()):
-            item = self.lw_profiles.item(i)
-            pi, _ = item.text().split(" - ", 1)  # type: str, str
-            r = delete_bookmark(self._current_browser, pi.strip(), self.lne_url.text())
-            if r:
-                s += 1
-            else:
-                f += 1
-
-        QtWidgets.QMessageBox.information(self, "信息", f"成功删除 {s} 个，失败 {f} 个。")
-        self.accept()
+from show_profiles import ShowProfilesWin
+from scan_bookmarks import scan_bookmarks
 
 
 class UiCheckBookmarksWin(object):
@@ -133,6 +51,7 @@ class CheckBookmarksWin(QtWidgets.QWidget):
     def on_pbn_update_clicked(self):
         self.ui.lne_filter.clear()
         self.on_browser_changed(self.browser)
+        QtWidgets.QMessageBox.information(self, "提示", "书签信息已更新。")
 
     def on_lne_filter_text_edited(self, text: str):
         if len(text) == 0:
@@ -158,7 +77,7 @@ class CheckBookmarksWin(QtWidgets.QWidget):
         else:
             title = bookmark
         browser = self.browser
-        spwin = ShowProfilesWin(browser, self)
+        spwin = ShowProfilesWin(browser, "bookmarks", self)
         spwin.setWindowTitle(f"{title} - {browser}")
         url = self._bmx_mp[bookmark]
         profiles_pos = self._bmx_db[url]["profiles_pos"]

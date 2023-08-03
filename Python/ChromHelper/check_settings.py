@@ -8,7 +8,7 @@ from jnlib.chromium_utils import (
     get_x_in_profile_path,
     overwrite_preferences_db,
 )
-from jnlib.pyside6_utils import change_color
+from jnlib.pyside6_utils import change_color, HorizontalLine
 
 
 class UiCheckSettingsWin(object):
@@ -33,9 +33,7 @@ class UiCheckSettingsWin(object):
         self.hly_top.addWidget(self.pbn_apply)
         self.hly_top.addWidget(self.pbn_apply_all)
 
-        self.hln_top = QtWidgets.QFrame(window)
-        self.hln_top.setFrameShape(QtWidgets.QFrame.Shape.HLine)
-        self.hln_top.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.hln_top = HorizontalLine(window)
         self.vly_m.addWidget(self.hln_top)
 
         self.hly_mid = QtWidgets.QHBoxLayout()

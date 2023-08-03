@@ -10,7 +10,7 @@ from export_bookmarks import ExportBookmarksWin
 
 import chrom_helper_rc
 
-version = [1, 0, 0, 20230802]
+version = [1, 1, 0, 20230803]
 
 
 class UiChromHelperMainWin(object):

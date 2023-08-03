@@ -1,5 +1,6 @@
 # code: utf8
 import json
+import shutil
 from pathlib import Path
 from PySide6 import QtCore
 
@@ -7,6 +8,11 @@ from jnlib.chromium_utils import (
     get_data_path, get_local_state_db,
     get_with_chained_keys,
     get_profile_paths,
+    get_secure_preferences_db,
+    overwrite_secure_preferences_db,
+    get_preferences_db,
+    overwrite_preferences_db,
+    get_x_in_profile_path,
 )
 
 
@@ -75,7 +81,9 @@ def _handle_single_extension(extension_path: Path, profile_id: str, profile_name
         if "profiles" not in ext_info:
             ext_info.setdefault("profiles", [])
 
-        ext_info["profiles"].append(f"{profile_id}%{profile_name}")
+        p_id_name = f"{profile_id}%{profile_name}"
+        if p_id_name not in ext_info["profiles"]:
+            ext_info["profiles"].append(p_id_name)
 
 
 def _handle_single_profile(profile_path: Path, ext_db: dict[str, dict],
@@ -113,3 +121,30 @@ def scan_extensions(browser: str) -> dict[str, dict]:
         _handle_single_profile(p, ext_db, plg_db, lst_db)
 
     return ext_db
+
+
+def delete_extension(browser: str, profile: str, ids: str) -> bool:
+    # 先把文件夹删了
+    extensions_path = get_x_in_profile_path(browser, profile, "Extensions")
+    if extensions_path is not None:
+        ext_folder_path = Path(extensions_path, ids)
+        if ext_folder_path.exists():
+            shutil.rmtree(ext_folder_path, ignore_errors=True)
+
+    s_pref_db = get_secure_preferences_db(browser, profile)
+    ext_settings = get_with_chained_keys(s_pref_db, ["extensions", "settings"])  # type: dict
+    if ext_settings is None or ids not in ext_settings:
+        return False
+    ext_settings.pop(ids)
+    overwrite_secure_preferences_db(s_pref_db, browser, profile)
+
+    # 其实上面如果删除成功了，下面的也无所谓了，所以不管如何返回都是 True
+
+    pref_db = get_preferences_db(browser, profile)
+    pinned_ext = get_with_chained_keys(pref_db, ["extensions", "pinned_extensions"])  # type: list
+    if pinned_ext is None or ids not in pinned_ext:
+        return True
+    pinned_ext.remove(ids)
+    overwrite_preferences_db(pref_db, browser, profile)
+
+    return True

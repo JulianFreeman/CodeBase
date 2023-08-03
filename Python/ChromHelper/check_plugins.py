@@ -1,77 +1,40 @@
 # code: utf8
+from typing import cast
 from os import PathLike
 from pathlib import Path
 from PySide6 import QtWidgets, QtCore, QtGui
 
-from jnlib.chromium_utils import get_exec_path
-from jnlib.pyside6_utils import PushButtonWithId, change_font
+from jnlib.pyside6_utils import PushButtonWithId, change_font, HorizontalLine
 
 from scan_extensions import scan_extensions
-
-
-class ShowProfilesWin(QtWidgets.QDialog):
-
-    def __init__(self, browser: str, parent: QtWidgets.QWidget | None = None):
-        super().__init__(parent)
-        self.resize(400, 360)
-
-        self.vly_m = QtWidgets.QVBoxLayout()
-        self.lw_profiles = QtWidgets.QListWidget(self)
-        self.lw_profiles.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
-        change_font(self.lw_profiles, "Consolas", 12, False)
-
-        self.pbn_open = QtWidgets.QPushButton("打开", self)
-        change_font(self.pbn_open, "DengXian", 12, True)
-
-        self.vly_m.addWidget(self.lw_profiles)
-        self.vly_m.addWidget(self.pbn_open)
-        self.setLayout(self.vly_m)
-
-        self.pbn_open.clicked.connect(self.on_pbn_open_clicked)
-
-        self._process = QtCore.QProcess(self)
-        self._current_browser = browser
-
-    def update_list(self, profiles: list[str, ...]):
-        profiles.sort(key=lambda x: 0 if x.split(" ", 1)[0] == "Default" else int(x.split(" - ")[0].split(" ")[1]))
-
-        self.lw_profiles.clear()
-        self.lw_profiles.addItems(profiles)
-
-    def on_pbn_open_clicked(self):
-        settings = QtCore.QSettings()
-        chrome_exec = settings.value("chrome_exec", "")  # type: str | object
-        if len(chrome_exec) == 0 or not Path(chrome_exec).exists():
-            chrome_exec = get_exec_path("chrome")
-        edge_exec = settings.value("edge_exec", "")  # type: str | object
-        if len(edge_exec) == 0 or not Path(edge_exec).exists():
-            edge_exec = get_exec_path("edge")
-        brave_exec = settings.value("brave_exec", "")  # type: str | object
-        if len(brave_exec) == 0 or not Path(brave_exec).exists():
-            brave_exec = get_exec_path("brave")
-
-        profiles = self.lw_profiles.selectedItems()
-        if self._current_browser == "Chrome":
-            cmd = rf'"{chrome_exec}" --profile-directory="{{0}}"'
-        elif self._current_browser == "Edge":
-            cmd = rf'"{edge_exec}" --profile-directory="{{0}}"'
-        elif self._current_browser == "Brave":
-            cmd = rf'"{brave_exec}" --profile-directory="{{0}}"'
-        else:
-            return
-
-        for p in profiles:
-            pi, _ = p.text().split(" - ", 1)  # type: str, str
-            self._process.startCommand(cmd.format(pi.strip()))
-            self._process.waitForFinished(10000)
+from show_profiles import ShowProfilesWin
 
 
 class CheckPluginsWin(QtWidgets.QWidget):
 
-    def __init__(self, browser:str, parent: QtWidgets.QWidget | None = None):
+    def __init__(self, browser: str, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
         self.browser = browser
         self.vly_m = QtWidgets.QVBoxLayout()
+
+        self.hly_top = QtWidgets.QHBoxLayout()
+        self.vly_m.addLayout(self.hly_top)
+
+        self.cbx_safe = QtWidgets.QCheckBox("安全", self)
+        self.cbx_unsafe = QtWidgets.QCheckBox("不安全", self)
+        self.cbx_unknown = QtWidgets.QCheckBox("未知", self)
+        self.cbx_safe.setChecked(True)
+        self.cbx_unsafe.setChecked(True)
+        self.cbx_unknown.setChecked(True)
+        self.pbn_update = QtWidgets.QPushButton("更新", self)
+        self.hly_top.addWidget(self.cbx_safe)
+        self.hly_top.addWidget(self.cbx_unsafe)
+        self.hly_top.addWidget(self.cbx_unknown)
+        self.hly_top.addStretch(1)
+        self.hly_top.addWidget(self.pbn_update)
+
+        self.hln_top = HorizontalLine(self)
+        self.vly_m.addWidget(self.hln_top)
 
         self.sa_plgs = QtWidgets.QScrollArea(self)
         self.sa_plgs.setWidgetResizable(True)
@@ -85,8 +48,13 @@ class CheckPluginsWin(QtWidgets.QWidget):
         self.vly_m.addWidget(self.sa_plgs)
         self.setLayout(self.vly_m)
 
+        self.pbn_update.clicked.connect(self.on_pbn_update_clicked)
+        self.cbx_safe.stateChanged.connect(self.on_cbx_safe_state_changed)
+        self.cbx_unsafe.stateChanged.connect(self.on_cbx_unsafe_state_changed)
+        self.cbx_unknown.stateChanged.connect(self.on_cbx_unknown_state_changed)
+
         self._ext_db = {}
-        self._current_widgets = []  # type: list[QtWidgets.QWidget]
+        self._current_widgets = []  # type: list[list[QtWidgets.QWidget]]
 
     def _gen_ext_info(self, ext_db: dict[str, dict]):
         self._ext_db = ext_db
@@ -96,8 +64,10 @@ class CheckPluginsWin(QtWidgets.QWidget):
             None: 0,
         }
 
-        for w in self._current_widgets[::-1]:
-            w.close()
+        for line in self._current_widgets[::-1]:
+            for w in line:
+                w.close()
+            line.clear()
         self._current_widgets.clear()
 
         for i, p in enumerate(ext_db):
@@ -120,16 +90,44 @@ class CheckPluginsWin(QtWidgets.QWidget):
 
             self.vly_wg_sa_plgs.insertWidget(0, wg_line)
 
-            self._current_widgets.extend([wg_line, lb_icon, lb_name, lb_status, pbn_show])
+            self._current_widgets.append([wg_line, lb_icon, lb_name, lb_status, pbn_show])
 
     def update_browser(self, browser: str):
         ext_db = scan_extensions(browser)
         self._gen_ext_info(ext_db)
 
+    def on_cbx_safe_state_changed(self, state: int):
+        show = QtCore.Qt.CheckState(state) == QtCore.Qt.CheckState.Checked
+        for line in self._current_widgets:
+            wg_line = line[0]
+            lb_status = cast(QtWidgets.QLabel, line[3])
+            if lb_status.property("status") > 0:
+                wg_line.setVisible(show)
+
+    def on_cbx_unsafe_state_changed(self, state: int):
+        show = QtCore.Qt.CheckState(state) == QtCore.Qt.CheckState.Checked
+        for line in self._current_widgets:
+            wg_line = line[0]
+            lb_status = cast(QtWidgets.QLabel, line[3])
+            if lb_status.property("status") < 0:
+                wg_line.setVisible(show)
+
+    def on_cbx_unknown_state_changed(self, state: int):
+        show = QtCore.Qt.CheckState(state) == QtCore.Qt.CheckState.Checked
+        for line in self._current_widgets:
+            wg_line = line[0]
+            lb_status = cast(QtWidgets.QLabel, line[3])
+            if lb_status.property("status") == 0:
+                wg_line.setVisible(show)
+
+    def on_pbn_update_clicked(self):
+        self.update_browser(self.browser)
+        QtWidgets.QMessageBox.information(self, "提示", "插件信息已更新。")
+
     def on_pbn_show_n_clicked_with_id(self, ids: str):
         profiles = self._ext_db[ids]["profiles"]  # type: list[str]
         browser = self.browser
-        spwin = ShowProfilesWin(browser, self)
+        spwin = ShowProfilesWin(browser, "plugins", self)
         spwin.setWindowTitle(f'{self._ext_db[ids]["name"]} - {browser}')
 
         icon = self._ext_db[ids]["icon"]
@@ -142,7 +140,7 @@ class CheckPluginsWin(QtWidgets.QWidget):
             pi, pn = p.split("%", 1)
             display_profiles.append(f"{pi:<12} - {pn}")
 
-        spwin.update_list(display_profiles)
+        spwin.update_list(display_profiles, ids)
         spwin.show()
 
     def on_browser_changed(self, browser: str):
@@ -263,4 +261,5 @@ class CheckPluginsWin(QtWidgets.QWidget):
                 border: {bw}px solid #9EA2AB;
             """)
         lb_s.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
+        lb_s.setProperty("status", status)
         return lb_s

@@ -1,7 +1,7 @@
 # code: utf8
 from PySide6 import QtWidgets, QtCore
 
-from jnlib.pyside6_utils import PushButtonWithId
+from jnlib.pyside6_utils import PushButtonWithId, HorizontalLine
 
 
 class ChromSettingsWin(QtWidgets.QDialog):
@@ -38,9 +38,7 @@ class ChromSettingsWin(QtWidgets.QDialog):
         self.gly_paths.addWidget(self.pbn_edge, 1, 2)
         self.gly_paths.addWidget(self.pbn_brave, 2, 2)
 
-        self.hln_1 = QtWidgets.QFrame(self)
-        self.hln_1.setFrameShape(QtWidgets.QFrame.Shape.HLine)
-        self.hln_1.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.hln_1 = HorizontalLine(self)
 
         self.gly_paths.addWidget(self.hln_1, 3, 0, 1, 3)
 
@@ -48,9 +46,7 @@ class ChromSettingsWin(QtWidgets.QDialog):
         self.gly_paths.addWidget(self.lne_plg_db, 4, 1)
         self.gly_paths.addWidget(self.pbn_plg_db, 4, 2)
 
-        self.hln_2 = QtWidgets.QFrame(self)
-        self.hln_2.setFrameShape(QtWidgets.QFrame.Shape.HLine)
-        self.hln_2.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.hln_2 = HorizontalLine(self)
 
         self.hly_bot = QtWidgets.QHBoxLayout()
         self.pbn_save = QtWidgets.QPushButton("保存", self)
