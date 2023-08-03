@@ -128,6 +128,8 @@ class CheckPluginsWin(QtWidgets.QWidget):
 
     def on_pbn_export_unknown_clicked(self):
         dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "导出未知")
+        if len(dirname) == 0:
+            return
         ex_file = Path(dirname, f"unknown_extensions_{self.browser}.json")
         if accept_warning(self, ex_file.exists(), "警告", "文件已存在，确认覆盖吗？"):
             return
@@ -159,6 +161,9 @@ class CheckPluginsWin(QtWidgets.QWidget):
     def on_browser_changed(self, browser: str):
         self.browser = browser
         self.update_browser(browser)
+        self.on_cbx_safe_state_changed(self.cbx_safe.checkState().value)
+        self.on_cbx_unsafe_state_changed(self.cbx_unsafe.checkState().value)
+        self.on_cbx_unknown_state_changed(self.cbx_unknown.checkState().value)
 
     @staticmethod
     def _create_line_widget(window: QtWidgets.QWidget, obj_name: str, rad=4) -> QtWidgets.QWidget:

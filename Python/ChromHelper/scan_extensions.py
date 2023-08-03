@@ -1,6 +1,7 @@
 # code: utf8
 import json
 import shutil
+from os import PathLike
 from pathlib import Path
 from PySide6 import QtCore
 
@@ -31,35 +32,84 @@ def _read_plg_db() -> dict[str, dict]:
         return data
 
 
-def _handle_single_extension(extension_path: Path, profile_id: str, profile_name: str,
-                             ext_db: dict[str, dict], plg_db: dict):
-    ext_id = extension_path.name
-
-    for version_path in extension_path.glob("*"):
-        if not version_path.is_dir():
-            continue
-
-        manifest_path = Path(version_path, "manifest.json")
-        if not manifest_path.exists():
-            continue
-
-        with open(manifest_path, "r", encoding="utf8") as f:
-            data = json.load(f)  # type: dict
-
-        name = data.get("name", "").replace("/", "").replace("\\", "")
-        icons = data.get("icons", {})
-        if len(icons) != 0:
-            icon_path = icons[str(max(map(int, icons.keys())))]  # type: str
-            # 以 / 为开头会导致前面的路径被忽略
-            if icon_path.startswith("/"):
-                icon_path = icon_path[1:]
-            icon_p = Path(version_path, icon_path)
-            if icon_p.exists():
-                icon = str(icon_p)
-            else:
-                icon = ""
+def _get_largest_icon(icons: dict, prefix_path: str | PathLike) -> str:
+    if len(icons) != 0:
+        icon_path = icons[str(max(map(int, icons.keys())))]  # type: str
+        # 以 / 为开头会导致前面的路径被忽略
+        if icon_path.startswith("/"):
+            icon_path = icon_path[1:]
+        icon_p = Path(prefix_path, icon_path)
+        if icon_p.exists():
+            icon = str(icon_p)
         else:
             icon = ""
+    else:
+        icon = ""
+
+    return icon
+
+
+def _get_info_from_manifest(ext_path: Path) -> tuple[str, str]:
+    """
+    ext_path 下应该包含 manifest.json 文件
+    """
+    manifest_path = Path(ext_path, "manifest.json")
+    if not manifest_path.exists():
+        return "", ""
+
+    with open(manifest_path, "r", encoding="utf8") as f:
+        data = json.load(f)  # type: dict
+
+    name = data.get("name", "").replace("/", "").replace("\\", "")
+    icons = data.get("icons", {})
+    icon = _get_largest_icon(icons, ext_path)
+
+    return name, icon
+
+
+def _handle_single_profile(browser: str, profile_path: Path, ext_db: dict[str, dict],
+                           plg_db: dict[str, dict], lst_db: dict):
+    extension_path = Path(profile_path, "Extensions")
+    if not extension_path.exists():
+        return
+
+    profile_id = profile_path.name
+
+    profile_name = get_with_chained_keys(lst_db, ["profile", "info_cache", profile_id, "shortcut_name"])
+    if profile_name is None:
+        profile_name = get_with_chained_keys(lst_db, ["profile", "info_cache", profile_id, "name"])
+    if profile_name is None:
+        profile_name = ""
+
+    s_pref_db = get_secure_preferences_db(browser, profile_id)
+    ext_settings = get_with_chained_keys(s_pref_db, ["extensions", "settings"])  # type: dict[str, dict]
+    if ext_settings is None:
+        return
+
+    for ext_id in ext_settings:
+        ext_data = ext_settings[ext_id]
+        if "manifest" in ext_data:
+            manifest = ext_data["manifest"]  # type: dict
+            # 有 manifest 的话一定有 path，应该吧
+            path = ext_data["path"]  # type: str
+            if path.startswith(ext_id):
+                path_p = Path(extension_path, path)
+            else:
+                path_p = Path(path)
+            # 有些插件的路径是不存在的，可能真的不存在，或者插件不可见
+            if not path_p.exists():
+                continue
+            name = manifest.get("name", "").replace("/", "").replace("\\", "")
+            icon = _get_largest_icon(manifest.get("icons", {}), path_p)
+        elif "path" in ext_data:
+            path = ext_data["path"]
+            path_p = Path(path)
+            if not path_p.exists():
+                continue
+            name, icon = _get_info_from_manifest(path_p)
+        else:
+            continue
+
         safe = None
         note = ""
 
@@ -86,25 +136,6 @@ def _handle_single_extension(extension_path: Path, profile_id: str, profile_name
             ext_info["profiles"].append(p_id_name)
 
 
-def _handle_single_profile(profile_path: Path, ext_db: dict[str, dict],
-                           plg_db: dict[str, dict], lst_db: dict):
-    extension_path = Path(profile_path, "Extensions")
-    if not extension_path.exists():
-        return
-
-    profile_id = profile_path.name
-
-    profile_name = get_with_chained_keys(lst_db, ["profile", "info_cache", profile_id, "shortcut_name"])
-    if profile_name is None:
-        profile_name = get_with_chained_keys(lst_db, ["profile", "info_cache", profile_id, "name"])
-    if profile_name is None:
-        profile_name = ""
-
-    # Preferences 文件中记录插件的方式各浏览器不一样，所以直接找文件夹了
-    for e in extension_path.glob("*"):
-        _handle_single_extension(e, profile_id, profile_name, ext_db, plg_db)
-
-
 def scan_extensions(browser: str) -> dict[str, dict]:
     ext_db = {}  # type: dict[str, dict]
 
@@ -117,8 +148,8 @@ def scan_extensions(browser: str) -> dict[str, dict]:
 
     plg_db = _read_plg_db()
 
-    for p in profile_paths:
-        _handle_single_profile(p, ext_db, plg_db, lst_db)
+    for profile in profile_paths:
+        _handle_single_profile(browser, profile, ext_db, plg_db, lst_db)
 
     return ext_db
 

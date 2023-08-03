@@ -57,6 +57,8 @@ class AnimatedToggle(QCheckBox):
 
         self.stateChanged.connect(self.setup_animation)
 
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
     def sizeHint(self):
         return QSize(58, 40)
 
