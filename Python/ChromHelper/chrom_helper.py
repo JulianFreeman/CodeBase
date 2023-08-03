@@ -10,7 +10,7 @@ from export_bookmarks import ExportBookmarksWin
 
 import chrom_helper_rc
 
-version = [1, 1, 0, 20230803]
+version = [1, 2, 0, 20230803]
 
 
 class UiChromHelperMainWin(object):
@@ -65,12 +65,12 @@ class UiChromHelperMainWin(object):
 
         # =============== Central Widget ==============
         browser = self.acg_browsers.checkedAction().text()
-        self.wg_check_settings = CheckSettingsWin(browser, self.tw_cw)
-        self.tw_cw.addTab(self.wg_check_settings, icons["bsc"], "设置")
         self.wg_check_plugins = CheckPluginsWin(browser, self.tw_cw)
         self.tw_cw.addTab(self.wg_check_plugins, icons["bpc"], "插件")
         self.wg_check_bookmarks = CheckBookmarksWin(browser, self.tw_cw)
         self.tw_cw.addTab(self.wg_check_bookmarks, icons["bmc"], "书签")
+        self.wg_check_settings = CheckSettingsWin(browser, self.tw_cw)
+        self.tw_cw.addTab(self.wg_check_settings, icons["bsc"], "设置")
         self.wg_export_bookmarks = ExportBookmarksWin(browser, self.tw_cw)
         self.tw_cw.addTab(self.wg_export_bookmarks, icons["ebk"], "导出书签")
 

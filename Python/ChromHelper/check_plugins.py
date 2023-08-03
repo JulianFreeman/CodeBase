@@ -1,13 +1,15 @@
 # code: utf8
+import json
 from typing import cast
 from os import PathLike
 from pathlib import Path
 from PySide6 import QtWidgets, QtCore, QtGui
 
-from jnlib.pyside6_utils import PushButtonWithId, change_font, HorizontalLine
+from jnlib.pyside6_utils import PushButtonWithId, change_font, accept_warning
 
 from scan_extensions import scan_extensions
 from show_profiles import ShowProfilesWin
+from animated_toggle import AnimatedToggle
 
 
 class CheckPluginsWin(QtWidgets.QWidget):
@@ -20,21 +22,20 @@ class CheckPluginsWin(QtWidgets.QWidget):
         self.hly_top = QtWidgets.QHBoxLayout()
         self.vly_m.addLayout(self.hly_top)
 
-        self.cbx_safe = QtWidgets.QCheckBox("安全", self)
-        self.cbx_unsafe = QtWidgets.QCheckBox("不安全", self)
-        self.cbx_unknown = QtWidgets.QCheckBox("未知", self)
+        self.cbx_safe = AnimatedToggle(self, checked_color="#008B00")
+        self.cbx_unsafe = AnimatedToggle(self, checked_color="#B00F0F")
+        self.cbx_unknown = AnimatedToggle(self, checked_color="#6C6C6C")
         self.cbx_safe.setChecked(True)
         self.cbx_unsafe.setChecked(True)
         self.cbx_unknown.setChecked(True)
-        self.pbn_update = QtWidgets.QPushButton("更新", self)
+        self.pbn_update = self._create_button(self, "pbn_update", "更　新", is_show=False)
+        self.pbn_export_unknown = self._create_button(self, "pbn_export_unknown", "导出未知", is_show=False)
         self.hly_top.addWidget(self.cbx_safe)
         self.hly_top.addWidget(self.cbx_unsafe)
         self.hly_top.addWidget(self.cbx_unknown)
         self.hly_top.addStretch(1)
         self.hly_top.addWidget(self.pbn_update)
-
-        self.hln_top = HorizontalLine(self)
-        self.vly_m.addWidget(self.hln_top)
+        self.hly_top.addWidget(self.pbn_export_unknown)
 
         self.sa_plgs = QtWidgets.QScrollArea(self)
         self.sa_plgs.setWidgetResizable(True)
@@ -48,10 +49,11 @@ class CheckPluginsWin(QtWidgets.QWidget):
         self.vly_m.addWidget(self.sa_plgs)
         self.setLayout(self.vly_m)
 
-        self.pbn_update.clicked.connect(self.on_pbn_update_clicked)
         self.cbx_safe.stateChanged.connect(self.on_cbx_safe_state_changed)
         self.cbx_unsafe.stateChanged.connect(self.on_cbx_unsafe_state_changed)
         self.cbx_unknown.stateChanged.connect(self.on_cbx_unknown_state_changed)
+        self.pbn_update.clicked.connect(self.on_pbn_update_clicked)
+        self.pbn_export_unknown.clicked.connect(self.on_pbn_export_unknown_clicked)
 
         self._ext_db = {}
         self._current_widgets = []  # type: list[list[QtWidgets.QWidget]]
@@ -77,7 +79,7 @@ class CheckPluginsWin(QtWidgets.QWidget):
             lb_name = self._create_name_label(wg_line, ext_db[p]["name"])
             lb_status = self._create_status_label(wg_line, status_map[ext_db[p]["safe"]])
             lb_status.setToolTip(ext_db[p]["note"])
-            pbn_show = self._create_show_button(wg_line, f"pbn_show_{i}", p)
+            pbn_show = self._create_button(wg_line, f"pbn_show_{i}", p, is_show=True)
             pbn_show.clicked_with_id.connect(self.on_pbn_show_n_clicked_with_id)
 
             hly_line = QtWidgets.QHBoxLayout()
@@ -123,6 +125,17 @@ class CheckPluginsWin(QtWidgets.QWidget):
     def on_pbn_update_clicked(self):
         self.update_browser(self.browser)
         QtWidgets.QMessageBox.information(self, "提示", "插件信息已更新。")
+
+    def on_pbn_export_unknown_clicked(self):
+        dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "导出未知")
+        ex_file = Path(dirname, f"unknown_extensions_{self.browser}.json")
+        if accept_warning(self, ex_file.exists(), "警告", "文件已存在，确认覆盖吗？"):
+            return
+
+        unknown_ext = {e: v["name"] for e, v in self._ext_db.items() if v["safe"] is None}
+        with open(ex_file, "w", encoding="utf8") as f:
+            json.dump(unknown_ext, f, indent=4, ensure_ascii=False)
+        QtWidgets.QMessageBox.information(self, "提示", f"已导出到 {ex_file}")
 
     def on_pbn_show_n_clicked_with_id(self, ids: str):
         profiles = self._ext_db[ids]["profiles"]  # type: list[str]
@@ -184,13 +197,19 @@ class CheckPluginsWin(QtWidgets.QWidget):
         return lb_i
 
     @staticmethod
-    def _create_show_button(window: QtWidgets.QWidget, obj_name: str, ids: str,
-                            family="DengXian", size=12, vpad=8, hpad=10, rad=4, bw=2) -> PushButtonWithId:
-        pbn_s = PushButtonWithId(ids, window)
-        pbn_s.setObjectName(obj_name)
-        pbn_s.setText("显示用户")
-        change_font(pbn_s, family, size)
-        pbn_s.setStyleSheet(f"""
+    def _create_button(window: QtWidgets.QWidget, obj_name: str, info: str,
+                       family="DengXian", size=12, vpad=8, hpad=10, rad=4, bw=2,
+                       *, is_show: bool) -> QtWidgets.QPushButton | PushButtonWithId:
+        if is_show:
+            pbn_1 = PushButtonWithId(info, window)
+            pbn_1.setText("显示用户")
+            pbn_1.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
+        else:
+            pbn_1 = QtWidgets.QPushButton(info, window)
+
+        pbn_1.setObjectName(obj_name)
+        change_font(pbn_1, family, size)
+        pbn_1.setStyleSheet(f"""
         #{obj_name} {{
             color: #1A1B1C;
             padding: {vpad}px {hpad}px;
@@ -207,9 +226,8 @@ class CheckPluginsWin(QtWidgets.QWidget):
             background-color: blue;
         }}
         """)
-        pbn_s.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
-        pbn_s.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
-        return pbn_s
+        pbn_1.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+        return pbn_1
 
     @staticmethod
     def _create_name_label(window: QtWidgets.QWidget, name: str,
