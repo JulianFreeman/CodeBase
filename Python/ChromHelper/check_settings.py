@@ -566,11 +566,18 @@ class CheckSettingsWin(QtWidgets.QWidget):
             return None
 
         webdata_db = self._get_database(f"{browser}_{profile}_webdata", str(web_data_path))
+        # 当数据库繁忙时不等待
+        webdata_db.setConnectOptions("QSQLITE_BUSY_TIMEOUT=0")
         if not webdata_db.open():
             return None
 
         sqm = QtSql.QSqlQueryModel(self)
         sqm.setQuery(self._SELECT_ENGINES_Q, webdata_db)
+        # 数据库繁忙时会有错误
+        if sqm.lastError().isValid():
+            QtWidgets.QMessageBox.warning(
+                self, "警告",
+                f"{browser} 浏览器的 {profile} 用户此时处于运行状态，无法读取搜索引擎信息。")
         sqm.setHeaderData(0, QtCore.Qt.Orientation.Horizontal, "搜索引擎")
         sqm.setHeaderData(1, QtCore.Qt.Orientation.Horizontal, "网址")
         return sqm
