@@ -167,11 +167,19 @@ def delete_extension(browser: str, profile: str, ids: str) -> bool:
         if ext_folder_path.exists():
             shutil.rmtree(ext_folder_path, ignore_errors=True)
 
+    code1, code2 = False, False
     s_pref_db = get_secure_preferences_db(browser, profile)
     ext_settings = get_with_chained_keys(s_pref_db, ["extensions", "settings"])  # type: dict
-    if ext_settings is None or ids not in ext_settings:
+    if ext_settings is not None and ids in ext_settings:
+        ext_settings.pop(ids)
+        code1 = True
+    protection = get_with_chained_keys(s_pref_db, ["protection", "macs", "extensions", "settings"])  # type: dict
+    if protection is not None and ids in protection:
+        protection.pop(ids)
+        code2 = True
+    if code1 is False and code2 is False:
         return False
-    ext_settings.pop(ids)
+
     overwrite_secure_preferences_db(s_pref_db, browser, profile)
 
     # 其实上面如果删除成功了，下面的也无所谓了，所以不管如何返回都是 True
