@@ -10,7 +10,7 @@ def change_color(widget: QtWidgets.QWidget,
     widget.setPalette(pal)
 
 
-def change_font(widget: QtWidgets.QWidget, family: str, size: int, bold=True):
+def change_font(widget: QtWidgets.QWidget, family: str, size: int, bold=False):
     font = widget.font()
     font.setFamily(family)
     font.setPointSize(size)
