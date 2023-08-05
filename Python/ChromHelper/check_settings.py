@@ -394,6 +394,7 @@ class CheckSettingsWin(QtWidgets.QWidget):
         return profiles, profiles_dic
 
     def refresh_profiles(self, browser: str):
+        self.ui.lw_profiles.clear()
         profiles, _ = self._get_browser_profiles(browser)
         if profiles is None:
             QtWidgets.QMessageBox.critical(
@@ -401,7 +402,6 @@ class CheckSettingsWin(QtWidgets.QWidget):
                 f"在 {browser} 的 Local State 文件中找不到 profile>info_cache。")
             return
 
-        self.ui.lw_profiles.clear()
         self.ui.lw_profiles.addItems(profiles)
 
     @staticmethod

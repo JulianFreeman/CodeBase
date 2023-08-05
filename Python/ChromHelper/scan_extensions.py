@@ -5,9 +5,9 @@ from os import PathLike
 from pathlib import Path
 from PySide6 import QtCore
 
+from jnlib.general_utils import get_with_chained_keys
 from jnlib.chromium_utils import (
     get_data_path, get_local_state_db,
-    get_with_chained_keys,
     get_profile_paths,
     get_secure_preferences_db,
     overwrite_secure_preferences_db,
@@ -140,7 +140,7 @@ def scan_extensions(browser: str) -> dict[str, dict]:
     ext_db = {}  # type: dict[str, dict]
 
     data_path = get_data_path(browser)
-    if not data_path.exists():
+    if data_path is None:
         return {}
 
     lst_db = get_local_state_db(browser, data_path=data_path)
@@ -158,6 +158,7 @@ def delete_extension(browser: str, profile: str, ids: str) -> bool:
     # 先把文件夹删了
     extensions_path = get_x_in_profile_path(browser, profile, "Extensions")
     if extensions_path is not None:
+        # 对于离线安装的插件，目录可能不在这个位置，所以就不删了
         ext_folder_path = Path(extensions_path, ids)
         if ext_folder_path.exists():
             shutil.rmtree(ext_folder_path, ignore_errors=True)

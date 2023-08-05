@@ -10,7 +10,7 @@ from export_bookmarks import ExportBookmarksWin
 
 import chrom_helper_rc
 
-version = [1, 2, 2, 20230803]
+version = [1, 2, 3, 20230804]
 
 
 class UiChromHelperMainWin(object):
@@ -92,9 +92,9 @@ class ChromHelperMainWin(QtWidgets.QMainWindow):
 
     def on_acg_browsers_triggered(self, action: QtGui.QAction):
         browser = action.text()
-        self.ui.wg_check_settings.on_browser_changed(browser)
         self.ui.wg_check_plugins.on_browser_changed(browser)
         self.ui.wg_check_bookmarks.on_browser_changed(browser)
+        self.ui.wg_check_settings.on_browser_changed(browser)
 
     def on_act_settings_triggered(self):
         cs_win = ChromSettingsWin(self)
