@@ -34,7 +34,11 @@ def _read_plg_db() -> dict[str, dict]:
 
 def _get_largest_icon(icons: dict, prefix_path: str | PathLike) -> str:
     if len(icons) != 0:
-        icon_path = icons[str(max(map(int, icons.keys())))]  # type: str
+        if "128" in icons:
+            icon_path = icons["128"]
+        else:
+            icon_path = icons[str(max(map(int, icons.keys())))]  # type: str
+
         # 以 / 为开头会导致前面的路径被忽略
         if icon_path.startswith("/"):
             icon_path = icon_path[1:]
