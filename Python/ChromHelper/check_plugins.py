@@ -203,7 +203,7 @@ class CheckPluginsWin(QtWidgets.QWidget):
 
     @staticmethod
     def _create_button(window: QtWidgets.QWidget, obj_name: str, info: str,
-                       family="DengXian", size=12, vpad=8, hpad=10, rad=4, bw=2,
+                       family="Noto Sans", size=12, vpad=8, hpad=10, rad=4, bw=2,
                        *, is_show: bool) -> QtWidgets.QPushButton | PushButtonWithId:
         if is_show:
             pbn_1 = PushButtonWithId(info, window)
@@ -236,7 +236,7 @@ class CheckPluginsWin(QtWidgets.QWidget):
 
     @staticmethod
     def _create_name_label(window: QtWidgets.QWidget, name: str,
-                           family="DengXian", size=12, vpad=4, hpad=6, rad=4, bw=2) -> QtWidgets.QLabel:
+                           family="Noto Sans", size=12, vpad=4, hpad=6, rad=4, bw=2) -> QtWidgets.QLabel:
         lb_n = QtWidgets.QLabel(window)
         change_font(lb_n, family, size)
         lb_n.setStyleSheet(f"""
@@ -253,7 +253,7 @@ class CheckPluginsWin(QtWidgets.QWidget):
 
     @staticmethod
     def _create_status_label(window: QtWidgets.QWidget, status: int,
-                             family="DengXian", size=12, vpad=4, hpad=6, rad=4, bw=2) -> QtWidgets.QLabel:
+                             family="Noto Sans", size=12, vpad=4, hpad=6, rad=4, bw=2) -> QtWidgets.QLabel:
         lb_s = QtWidgets.QLabel(window)
         change_font(lb_s, family, size)
         if status > 0:

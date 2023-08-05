@@ -10,7 +10,7 @@ from export_bookmarks import ExportBookmarksWin
 
 import chrom_helper_rc
 
-version = [1, 2, 4, 20230804]
+version = [1, 2, 5, 20230805]
 
 
 class UiChromHelperMainWin(object):
@@ -31,7 +31,8 @@ class UiChromHelperMainWin(object):
         window.setWindowIcon(QtGui.QIcon(":/img/chrom_helper_64.png"))
 
         self.tw_cw = QtWidgets.QTabWidget(window)
-        self.tw_cw.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
+        if sys.platform == "win32":
+            self.tw_cw.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         window.setCentralWidget(self.tw_cw)
         self.menu_bar = window.menuBar()
 
