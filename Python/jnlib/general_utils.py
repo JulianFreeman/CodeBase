@@ -1,4 +1,7 @@
 # code: utf8
+from pathlib import Path
+
+
 def args_match(args: tuple, count: int, a_types: tuple) -> bool:
     if len(args) != count:
         return False
@@ -28,23 +31,10 @@ def append_dic(dic: dict, sub_dic: dict):
         append_dic(dic[k], sub_dic[k])
 
 
-def decimal2any(num: int, base: int, big_endian: bool = False) -> tuple[int, ...]:
-    res = []  # type: list[int, ...]
-    while True:
-        div, mod = divmod(num, base)
-        res.append(mod)
-        if div == 0:
-            break
-        num = div
-    if big_endian:
-        res = res[::-1]
-    return tuple(res)
-
-
-def any2decimal(num: tuple[int, ...], base: int, big_endian: bool = False) -> int:
-    res = 0
-    if big_endian:
-        num = num[::-1]
-    for i in range(len(num)):
-        res += num[i] * pow(base, i)
-    return res
+def path_not_exist(path: str | Path) -> bool:
+    if isinstance(path, str):
+        return len(path) == 0 or not Path(path).exists()
+    elif isinstance(path, Path):
+        return not path.exists()
+    else:
+        return True
