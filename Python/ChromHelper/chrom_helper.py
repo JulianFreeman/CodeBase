@@ -3,14 +3,12 @@ import sys
 from PySide6 import QtWidgets, QtGui
 
 from chrom_settings import ChromSettingsWin
-from check_settings import CheckSettingsWin
 from check_plugins import CheckPluginsWin
 from check_bookmarks import CheckBookmarksWin
+from check_settings import CheckSettingsWin
 from export_bookmarks import ExportBookmarksWin
 
 import chrom_helper_rc
-
-version = [1, 2, 6, 20230805]
 
 
 class UiChromHelperMainWin(object):
@@ -78,8 +76,9 @@ class UiChromHelperMainWin(object):
 
 class ChromHelperMainWin(QtWidgets.QMainWindow):
 
-    def __init__(self, parent: QtWidgets.QWidget | None = None):
+    def __init__(self, parent: QtWidgets.QWidget | None = None, *, version: list[int]):
         super().__init__(parent)
+        self.version = version
         self.ui = UiChromHelperMainWin(self)
 
         # ====== Menu Bar =========
@@ -102,6 +101,7 @@ class ChromHelperMainWin(QtWidgets.QMainWindow):
         cs_win.exec()
 
     def on_act_about_triggered(self):
+        version = self.version
         about_text = ("Chromium 核心浏览器辅助工具\n\n旨在更方便地对以 Chromium 为核心的浏览器"
                       "进行快速设置、插件检查、书签检查、书签导出等操作。\n\n"
                       f"当前版本：v{version[0]}.{version[1]}.{version[2]}，发布日期：{version[-1]}")
@@ -111,15 +111,13 @@ class ChromHelperMainWin(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.aboutQt(self, "关于 Qt")
 
 
-def main():
+def launch(org_name: str, app_name: str, has_log: bool, log_err: str, version: list[int]):
     app = QtWidgets.QApplication(sys.argv)
-    app.setOrganizationName("JnPrograms")
-    app.setApplicationName("ChromHelper")
+    app.setOrganizationName(org_name)
+    app.setApplicationName(app_name)
 
-    win = ChromHelperMainWin()
+    win = ChromHelperMainWin(version=version)
     win.show()
-    sys.exit(app.exec())
-
-
-if __name__ == '__main__':
-    main()
+    if not has_log:
+        QtWidgets.QMessageBox.information(win, "提示", f"日志记录未开启：{log_err}")
+    return app.exec()

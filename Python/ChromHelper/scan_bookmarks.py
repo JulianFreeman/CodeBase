@@ -1,6 +1,7 @@
 # code: utf8
 import os
 import json
+import logging
 from pathlib import Path
 
 from jnlib.chromium_utils import (
@@ -31,12 +32,14 @@ def _enter_level(data: dict, bmx_db: dict, profile_name: str, pos: list[str, ...
 def _handle_single_profile(profile_path: Path, bmx_db: dict[str, dict]):
     bookmarks_path = Path(profile_path, "Bookmarks")
     if not bookmarks_path.exists():
+        logging.error(f"未找到 [{bookmarks_path}]")
         return
 
     with open(bookmarks_path, "r", encoding="utf8") as f:
         data = json.load(f)  # type: dict
 
     if "roots" not in data:
+        logging.warning(f"未在 [{bookmarks_path}] 中找到 roots")
         return
 
     roots = data["roots"]
@@ -58,12 +61,14 @@ def scan_bookmarks(browser: str) -> tuple[dict[str, dict], dict[str, str]]:
 def delete_bookmark(browser: str, profile: str, url: str) -> bool:
     data_path = get_data_path(browser)
     if data_path is None:
+        logging.error(f"删除 [{browser}] 书签时未找到 DATA PATH")
         return False
     bookmark_bak_p = get_x_in_profile_path(browser, profile, "Bookmarks.bak", data_path=data_path)
     if bookmark_bak_p is not None:
         os.remove(bookmark_bak_p)
     bookmark_p = get_x_in_profile_path(browser, profile, "Bookmarks", data_path=data_path)
     if bookmark_p is None:
+        logging.error(f"未找到 [{bookmark_p}]")
         return False
 
     with open(bookmark_p, "r", encoding="utf8") as f:

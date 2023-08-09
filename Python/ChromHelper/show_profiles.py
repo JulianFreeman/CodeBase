@@ -67,7 +67,8 @@ class ShowProfilesWin(QtWidgets.QDialog):
             "Brave": brave_exec,
         }
         pro = pro_map.get(self.browser, None)
-        if pro is None:
+        if pro is None or not Path(pro).exists():
+            QtWidgets.QMessageBox.critical(self, "错误", f"未找到 {self.browser} 的执行文件路径。")
             return
         cmd = rf'"{pro}" --profile-directory="{{0}}"'
 

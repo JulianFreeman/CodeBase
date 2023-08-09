@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from PySide6 import QtWidgets, QtCore, QtGui
 
+from jnlib.general_utils import path_not_exist
 from jnlib.pyside6_utils import HorizontalLine
 
 from bookmarks2kdbx import bm2xml
@@ -108,9 +109,8 @@ class ExportBookmarksWin(QtWidgets.QWidget):
     def _show_kpx_version(self, cli_path: str = None):
         if cli_path is None:
             cli_path = self.ui.lne_cli_path.text()
-        cli_path_p = Path(cli_path)
 
-        if len(cli_path) == 0 or not cli_path_p.exists():
+        if path_not_exist(cli_path):
             self.ui.txe_output.append("没有找到 keepassxc_cli 文件，请指定正确的执行路径。")
             return
 

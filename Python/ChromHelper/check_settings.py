@@ -1,4 +1,6 @@
 # code: utf8
+import logging
+
 from PySide6 import QtWidgets, QtCore, QtGui, QtSql
 
 from jnlib.general_utils import get_with_chained_keys, append_dic
@@ -386,6 +388,7 @@ class CheckSettingsWin(QtWidgets.QWidget):
         lst_db = get_local_state_db(browser)
         profiles_dic = get_with_chained_keys(lst_db, ["profile", "info_cache"])
         if profiles_dic is None:
+            logging.error(f"在 {browser} 的 Local State 文件中找不到 profile>info_cache")
             return None, None
 
         profiles = list(profiles_dic.keys())
@@ -397,9 +400,6 @@ class CheckSettingsWin(QtWidgets.QWidget):
         self.ui.lw_profiles.clear()
         profiles, _ = self._get_browser_profiles(browser)
         if profiles is None:
-            QtWidgets.QMessageBox.critical(
-                self, "错误",
-                f"在 {browser} 的 Local State 文件中找不到 profile>info_cache。")
             return
 
         self.ui.lw_profiles.addItems(profiles)
@@ -563,12 +563,14 @@ class CheckSettingsWin(QtWidgets.QWidget):
     def _get_web_data_db_model(self, browser: str, profile: str) -> QtSql.QSqlQueryModel | None:
         web_data_path = get_x_in_profile_path(browser, profile, "Web Data")
         if web_data_path is None:
+            logging.error(f"未找到 [{web_data_path}]")
             return None
 
         webdata_db = self._get_database(f"{browser}_{profile}_webdata", str(web_data_path))
         # 当数据库繁忙时不等待
         webdata_db.setConnectOptions("QSQLITE_BUSY_TIMEOUT=0")
         if not webdata_db.open():
+            logging.error(f"未能打开 [{web_data_path}]")
             return None
 
         sqm = QtSql.QSqlQueryModel(self)
@@ -585,10 +587,12 @@ class CheckSettingsWin(QtWidgets.QWidget):
     def _get_affiliation_db_model(self, browser: str, profile: str) -> QtSql.QSqlQueryModel | None:
         affiliation_path = get_x_in_profile_path(browser, profile, "Affiliation Database")
         if affiliation_path is None:
+            logging.error(f"未找到 [{affiliation_path}]")
             return None
 
         affiliation_db = self._get_database(f"{browser}_{profile}_affiliation", str(affiliation_path))
         if not affiliation_db.open():
+            logging.error(f"未能打开 [{affiliation_path}]")
             return None
 
         sqm = QtSql.QSqlQueryModel(self)

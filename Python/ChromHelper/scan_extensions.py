@@ -1,11 +1,12 @@
 # code: utf8
 import json
 import shutil
+import logging
 from os import PathLike
 from pathlib import Path
 from PySide6 import QtCore
 
-from jnlib.general_utils import get_with_chained_keys
+from jnlib.general_utils import get_with_chained_keys, path_not_exist
 from jnlib.chromium_utils import (
     get_data_path, get_local_state_db,
     get_profile_paths,
@@ -20,15 +21,18 @@ from jnlib.chromium_utils import (
 def _read_plg_db() -> dict[str, dict]:
     settings = QtCore.QSettings()
     plg_db = settings.value("plg_db", "")  # type: str | object
-    if len(plg_db) == 0 or not Path(plg_db).exists():
+    if path_not_exist(plg_db):
+        logging.info("未找到 [插件预存库文件]。")
         return {}
 
     try:
         with open(plg_db, "r", encoding="utf8") as f:
             data = json.load(f)
     except:
+        logging.warning("无法打开 [插件预存库文件]。")
         return {}
     else:
+        logging.info("已加载 [插件预存库文件]。")
         return data
 
 
@@ -59,6 +63,7 @@ def _get_info_from_manifest(ext_path: Path) -> tuple[str, str]:
     """
     manifest_path = Path(ext_path, "manifest.json")
     if not manifest_path.exists():
+        logging.error(f"未找到 [{manifest_path}]")
         return "", ""
 
     with open(manifest_path, "r", encoding="utf8") as f:
@@ -75,6 +80,7 @@ def _handle_single_profile(browser: str, profile_path: Path, ext_db: dict[str, d
                            plg_db: dict[str, dict], lst_db: dict):
     extension_path = Path(profile_path, "Extensions")
     if not extension_path.exists():
+        logging.error(f"未找到 [{extension_path}]")
         return
 
     profile_id = profile_path.name
@@ -88,7 +94,12 @@ def _handle_single_profile(browser: str, profile_path: Path, ext_db: dict[str, d
     s_pref_db = get_secure_preferences_db(browser, profile_id)
     ext_settings = get_with_chained_keys(s_pref_db, ["extensions", "settings"])  # type: dict[str, dict]
     if ext_settings is None:
-        return
+        logging.warning(f"在 {profile_path} 的 Secure Preferences 文件中未找到扩展信息")
+        pref_db = get_preferences_db(browser, profile_id)
+        ext_settings = get_with_chained_keys(pref_db, ["extensions", "settings"])  # type: dict[str, dict]
+        if ext_settings is None:
+            logging.warning(f"在 {profile_path} 的 Preferences 文件中未找到扩展信息")
+            return
 
     for ext_id in ext_settings:
         ext_data = ext_settings[ext_id]
@@ -145,6 +156,7 @@ def scan_extensions(browser: str) -> dict[str, dict]:
 
     data_path = get_data_path(browser)
     if data_path is None:
+        logging.error(f"在扫描 {browser} 插件时未找到 DATA PATH")
         return {}
 
     lst_db = get_local_state_db(browser, data_path=data_path)
@@ -173,11 +185,19 @@ def delete_extension(browser: str, profile: str, ids: str) -> bool:
     if ext_settings is not None and ids in ext_settings:
         ext_settings.pop(ids)
         code1 = True
+    else:
+        pref_db = get_preferences_db(browser, profile)
+        ext_settings = get_with_chained_keys(pref_db, ["extensions", "settings"])  # type: dict
+        if ext_settings is not None and ids in ext_settings:
+            ext_settings.pop(ids)
+            code1 = True
+
     protection = get_with_chained_keys(s_pref_db, ["protection", "macs", "extensions", "settings"])  # type: dict
     if protection is not None and ids in protection:
         protection.pop(ids)
         code2 = True
     if code1 is False and code2 is False:
+        logging.warning(f"删除 [{browser}/{profile}/{ids}] 失败：未找到插件信息")
         return False
 
     overwrite_secure_preferences_db(s_pref_db, browser, profile)
