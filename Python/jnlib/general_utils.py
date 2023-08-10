@@ -1,4 +1,5 @@
 # code: utf8
+import os
 from pathlib import Path
 
 
@@ -38,3 +39,18 @@ def path_not_exist(path: str | Path) -> bool:
         return not path.exists()
     else:
         return True
+
+
+def get_log_dir(plat: str) -> Path | None:
+    match plat:
+        case "win32":
+            log_dir = os.path.expandvars("%appdata%")
+        case "darwin":
+            log_dir = os.path.expanduser("~") + "/.local/share"
+        case _:
+            return None
+    log_dir_p = Path(log_dir)
+    if log_dir_p.exists():
+        return log_dir_p
+    else:
+        return None
