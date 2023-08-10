@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/">
+    <file>img/aex_16.png</file>
     <file>img/ebk_16.png</file>
     <file>img/svg/ellipsis.svg</file>
     <file>img/svg/eye.svg</file>

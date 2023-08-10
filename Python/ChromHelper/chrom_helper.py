@@ -2,7 +2,7 @@
 import sys
 import shutil
 from pathlib import Path
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from jnlib.general_utils import get_log_dir
 
@@ -10,6 +10,7 @@ from chrom_settings import ChromSettingsWin
 from check_plugins import CheckPluginsWin
 from check_bookmarks import CheckBookmarksWin
 from check_settings import CheckSettingsWin
+from append_extensions import AppendExtensionsWin
 
 import chrom_helper_rc
 
@@ -18,12 +19,13 @@ class UiChromHelperMainWin(object):
 
     def __init__(self, window: QtWidgets.QMainWindow):
         icons = {
-            "chrome": QtGui.QIcon(":/img/chrome_32.png"),
-            "edge": QtGui.QIcon(":/img/edge_32.png"),
-            "brave": QtGui.QIcon(":/img/brave_32.png"),
-            "bsc": QtGui.QIcon(":/img/bsc_16.png"),
-            "bpc": QtGui.QIcon(":/img/bpc_16.png"),
-            "bmc": QtGui.QIcon(":/img/bmc_16.png"),
+            "chrome": ":/img/chrome_32.png",
+            "edge": ":/img/edge_32.png",
+            "brave": ":/img/brave_32.png",
+            "bsc": ":/img/bsc_16.png",
+            "bpc": ":/img/bpc_16.png",
+            "bmc": ":/img/bmc_16.png",
+            "aex": ":/img/aex_16.png",
         }
 
         window.resize(860, 680)
@@ -31,16 +33,14 @@ class UiChromHelperMainWin(object):
         window.setWindowIcon(QtGui.QIcon(":/img/chrom_helper_64.png"))
 
         self.tw_cw = QtWidgets.QTabWidget(window)
-        if sys.platform == "win32":
-            self.tw_cw.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         window.setCentralWidget(self.tw_cw)
         self.menu_bar = window.menuBar()
 
         # ========== Menu Bar =====================
         self.menu_browsers = self.menu_bar.addMenu("浏览器")
-        self.act_browser_chrome = QtGui.QAction(icons["chrome"], "Chrome", window)
-        self.act_browser_edge = QtGui.QAction(icons["edge"], "Edge", window)
-        self.act_browser_brave = QtGui.QAction(icons["brave"], "Brave", window)
+        self.act_browser_chrome = QtGui.QAction(QtGui.QIcon(icons["chrome"]), "Chrome", window)
+        self.act_browser_edge = QtGui.QAction(QtGui.QIcon(icons["edge"]), "Edge", window)
+        self.act_browser_brave = QtGui.QAction(QtGui.QIcon(icons["brave"]), "Brave", window)
         self.act_browser_chrome.setCheckable(True)
         # 保证子窗口的初始化成功
         self.act_browser_chrome.setChecked(True)
@@ -70,11 +70,40 @@ class UiChromHelperMainWin(object):
         # =============== Central Widget ==============
         browser = self.acg_browsers.checkedAction().text()
         self.wg_check_plugins = CheckPluginsWin(browser, self.tw_cw)
-        self.tw_cw.addTab(self.wg_check_plugins, icons["bpc"], "插件")
         self.wg_check_bookmarks = CheckBookmarksWin(browser, self.tw_cw)
-        self.tw_cw.addTab(self.wg_check_bookmarks, icons["bmc"], "书签")
         self.wg_check_settings = CheckSettingsWin(browser, self.tw_cw)
-        self.tw_cw.addTab(self.wg_check_settings, icons["bsc"], "设置")
+        self.wg_append_extensions = AppendExtensionsWin(browser, self.tw_cw)
+
+        if sys.platform == "win32":
+            self.tw_cw.addTab(self.wg_check_plugins, "")
+            self.tw_cw.addTab(self.wg_check_bookmarks, "")
+            self.tw_cw.addTab(self.wg_check_settings, "")
+            self.tw_cw.addTab(self.wg_append_extensions, "")
+            self.tw_cw.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
+            tbb_tw_cw = self.tw_cw.tabBar()
+            lb_tbb_wg_check_plugins = self.create_tab_label(icons["bpc"], "插件", tbb_tw_cw)
+            lb_tbb_wg_check_bookmarks = self.create_tab_label(icons["bmc"], "书签", tbb_tw_cw)
+            lb_tbb_wg_check_settings = self.create_tab_label(icons["bsc"], "设置", tbb_tw_cw)
+            lb_tbb_wg_append_extensions = self.create_tab_label(icons["aex"], "追加插件", tbb_tw_cw)
+            tbb_tw_cw.setTabButton(0, QtWidgets.QTabBar.ButtonPosition.RightSide, lb_tbb_wg_check_plugins)
+            tbb_tw_cw.setTabButton(1, QtWidgets.QTabBar.ButtonPosition.RightSide, lb_tbb_wg_check_bookmarks)
+            tbb_tw_cw.setTabButton(2, QtWidgets.QTabBar.ButtonPosition.RightSide, lb_tbb_wg_check_settings)
+            tbb_tw_cw.setTabButton(3, QtWidgets.QTabBar.ButtonPosition.RightSide, lb_tbb_wg_append_extensions)
+        else:
+            self.tw_cw.addTab(self.wg_check_plugins, QtGui.QIcon(icons["bpc"]), "插件")
+            self.tw_cw.addTab(self.wg_check_bookmarks, QtGui.QIcon(icons["bmc"]), "书签")
+            self.tw_cw.addTab(self.wg_check_settings, QtGui.QIcon(icons["bsc"]), "设置")
+            self.tw_cw.addTab(self.wg_append_extensions, QtGui.QIcon(icons["aex"]), "追加插件")
+
+    @staticmethod
+    def create_tab_label(icon: str, title: str, tab_bar: QtWidgets.QTabBar) -> QtWidgets.QLabel:
+        lb_i = QtWidgets.QLabel(tab_bar)
+        lb_i.setTextFormat(QtCore.Qt.TextFormat.RichText)
+        title_wz_span = [f"<span>{s}</span>" for s in title]
+        title_span_wz_br = "<br>".join(title_wz_span)
+        lb_i.setText(f"""<html><head/><body><span><img src="{icon}"/></span><br>{title_span_wz_br}</body></html>""")
+        lb_i.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        return lb_i
 
 
 class ChromHelperMainWin(QtWidgets.QMainWindow):
@@ -102,6 +131,7 @@ class ChromHelperMainWin(QtWidgets.QMainWindow):
         self.ui.wg_check_plugins.on_browser_changed(browser)
         self.ui.wg_check_bookmarks.on_browser_changed(browser)
         self.ui.wg_check_settings.on_browser_changed(browser)
+        self.ui.wg_append_extensions.on_browser_changed(browser)
 
     def on_act_settings_triggered(self):
         cs_win = ChromSettingsWin(self)

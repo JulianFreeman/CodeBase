@@ -119,12 +119,10 @@ class AnimatedToggle(QCheckBox):
 
         p.end()
 
-    @Property(float)
-    def handle_position(self):
+    def get_handle_position(self):
         return self._handle_position
 
-    @handle_position.setter
-    def handle_position(self, pos):
+    def set_handle_position(self, pos):
         """change the property
         we need to trigger QWidget.update() method, either by:
             1- calling it here [ what we're doing ].
@@ -133,11 +131,12 @@ class AnimatedToggle(QCheckBox):
         self._handle_position = pos
         self.update()
 
-    @Property(float)
-    def pulse_radius(self):
+    def get_pulse_radius(self):
         return self._pulse_radius
 
-    @pulse_radius.setter
-    def pulse_radius(self, pos):
+    def set_pulse_radius(self, pos):
         self._pulse_radius = pos
         self.update()
+
+    handle_position = Property(float, fget=get_handle_position, fset=set_handle_position)
+    pulse_radius = Property(float, fget=get_pulse_radius, fset=set_pulse_radius)

@@ -8,7 +8,7 @@ from jnlib.general_utils import get_log_dir
 
 from chrom_helper import launch
 
-version = [1, 4, 0, 20230809]
+version = [1, 5, 0, 20230810]
 
 ORG_NAME = "JnPrograms"
 APP_NAME = "ChromHelper"

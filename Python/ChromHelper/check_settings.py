@@ -10,7 +10,7 @@ from jnlib.chromium_utils import (
     get_x_in_profile_path,
     overwrite_preferences_db,
 )
-from jnlib.pyside6_utils import change_color, HorizontalLine
+from jnlib.pyside6_utils import change_color, HorizontalLine, get_sql_database
 
 
 class UiCheckSettingsWin(object):
@@ -550,23 +550,13 @@ class CheckSettingsWin(QtWidgets.QWidget):
                 self.ui.cbx_brave_cd_site_settings,
                 get_with_chained_keys(pref_db, ["browser", "clear_data", "site_settings_on_exit"]), False)
 
-    @staticmethod
-    def _get_database(conn_name: str, file_path: str) -> QtSql.QSqlDatabase:
-        if QtSql.QSqlDatabase.contains(conn_name):
-            db = QtSql.QSqlDatabase.database(conn_name, open=False)
-        else:
-            db = QtSql.QSqlDatabase.addDatabase("QSQLITE", conn_name)
-            db.setDatabaseName(file_path)
-
-        return db
-
     def _get_web_data_db_model(self, browser: str, profile: str) -> QtSql.QSqlQueryModel | None:
         web_data_path = get_x_in_profile_path(browser, profile, "Web Data")
         if web_data_path is None:
             logging.error(f"未找到 [{web_data_path}]")
             return None
 
-        webdata_db = self._get_database(f"{browser}_{profile}_webdata", str(web_data_path))
+        webdata_db = get_sql_database(f"{browser}_{profile}_webdata", str(web_data_path))
         # 当数据库繁忙时不等待
         webdata_db.setConnectOptions("QSQLITE_BUSY_TIMEOUT=0")
         if not webdata_db.open():
@@ -590,7 +580,7 @@ class CheckSettingsWin(QtWidgets.QWidget):
             logging.error(f"未找到 [{affiliation_path}]")
             return None
 
-        affiliation_db = self._get_database(f"{browser}_{profile}_affiliation", str(affiliation_path))
+        affiliation_db = get_sql_database(f"{browser}_{profile}_affiliation", str(affiliation_path))
         if not affiliation_db.open():
             logging.error(f"未能打开 [{affiliation_path}]")
             return None
@@ -837,7 +827,7 @@ class CheckSettingsWin(QtWidgets.QWidget):
         if clear_browser_engines:
             web_data_path = get_x_in_profile_path(browser, profile, "Web Data")
             if web_data_path is not None:
-                webdata_db = self._get_database(f"{browser}_{profile}_webdata", str(web_data_path))
+                webdata_db = get_sql_database(f"{browser}_{profile}_webdata", str(web_data_path))
                 if webdata_db.isOpen() or webdata_db.open():
                     wd_query = QtSql.QSqlQuery(webdata_db)
                     wd_query.exec(self._DELETE_ENGINES_Q)
@@ -849,7 +839,7 @@ class CheckSettingsWin(QtWidgets.QWidget):
         if clear_saved_pass:
             affiliation_path = get_x_in_profile_path(browser, profile, "Affiliation Database")
             if affiliation_path is not None:
-                affiliation_db = self._get_database(f"{browser}_{profile}_affiliation", str(affiliation_path))
+                affiliation_db = get_sql_database(f"{browser}_{profile}_affiliation", str(affiliation_path))
                 if affiliation_db.isOpen() or affiliation_db.open():
                     af_query = QtSql.QSqlQuery(affiliation_db)
                     for q in self._DELETE_PASSWORDS_Q_L:

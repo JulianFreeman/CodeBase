@@ -15,6 +15,8 @@ from jnlib.chromium_utils import (
     get_preferences_db,
     overwrite_preferences_db,
     get_x_in_profile_path,
+    get_extension_settings,
+    get_protection_macs_es,
 )
 
 
@@ -91,15 +93,10 @@ def _handle_single_profile(browser: str, profile_path: Path, ext_db: dict[str, d
     if profile_name is None:
         profile_name = ""
 
-    s_pref_db = get_secure_preferences_db(browser, profile_id)
-    ext_settings = get_with_chained_keys(s_pref_db, ["extensions", "settings"])  # type: dict[str, dict]
-    if ext_settings is None:
-        logging.warning(f"在 {profile_path} 的 Secure Preferences 文件中未找到扩展信息")
-        pref_db = get_preferences_db(browser, profile_id)
-        ext_settings = get_with_chained_keys(pref_db, ["extensions", "settings"])  # type: dict[str, dict]
-        if ext_settings is None:
-            logging.warning(f"在 {profile_path} 的 Preferences 文件中未找到扩展信息")
-            return
+    ext_settings = get_extension_settings(browser, profile_id)
+    if len(ext_settings) == 0:
+        logging.warning(f"在 {profile_path} 下未找到扩展信息")
+        return
 
     for ext_id in ext_settings:
         ext_data = ext_settings[ext_id]
@@ -181,19 +178,14 @@ def delete_extension(browser: str, profile: str, ids: str) -> bool:
 
     code1, code2 = False, False
     s_pref_db = get_secure_preferences_db(browser, profile)
-    ext_settings = get_with_chained_keys(s_pref_db, ["extensions", "settings"])  # type: dict
-    if ext_settings is not None and ids in ext_settings:
+    pref_db = get_preferences_db(browser, profile)
+    ext_settings = get_extension_settings(browser, profile, s_pref_db, pref_db)
+    if ids in ext_settings:
         ext_settings.pop(ids)
         code1 = True
-    else:
-        pref_db = get_preferences_db(browser, profile)
-        ext_settings = get_with_chained_keys(pref_db, ["extensions", "settings"])  # type: dict
-        if ext_settings is not None and ids in ext_settings:
-            ext_settings.pop(ids)
-            code1 = True
 
-    protection = get_with_chained_keys(s_pref_db, ["protection", "macs", "extensions", "settings"])  # type: dict
-    if protection is not None and ids in protection:
+    protection = get_protection_macs_es(browser, profile, s_pref_db)
+    if ids in protection:
         protection.pop(ids)
         code2 = True
     if code1 is False and code2 is False:
@@ -204,7 +196,6 @@ def delete_extension(browser: str, profile: str, ids: str) -> bool:
 
     # 其实上面如果删除成功了，下面的也无所谓了，所以不管如何返回都是 True
 
-    pref_db = get_preferences_db(browser, profile)
     pinned_ext = get_with_chained_keys(pref_db, ["extensions", "pinned_extensions"])  # type: list
     if pinned_ext is None or ids not in pinned_ext:
         return True

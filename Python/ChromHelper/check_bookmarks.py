@@ -114,7 +114,7 @@ class CheckBookmarksWin(QtWidgets.QWidget):
     def on_lne_filter_text_edited(self, text: str):
         self.ui.lw_bookmarks.clear()
         if len(text) == 0:
-            filtered_bmx = self._bmx_mp
+            filtered_bmx = [b for b in self._bmx_mp]
         else:
             by_url = self.ui.cbx_filter_by_url.checkState() == QtCore.Qt.CheckState.Checked
             text = text.lower()

@@ -41,7 +41,7 @@ class ShowProfilesWin(QtWidgets.QDialog):
 
         self._process = QtCore.QProcess(self)
 
-    def update_list(self, profiles: list[str, ...], info: str):
+    def update_list(self, profiles: list[str], info: str):
         profiles.sort(key=lambda x: 0 if x.split(" ", 1)[0] == "Default" else int(x.split(" - ")[0].split(" ")[1]))
 
         self.lw_profiles.clear()
