@@ -54,7 +54,7 @@ def get_data_path(browser: str) -> Path | None:
     return data_path
 
 
-def get_x_in_profile_path(browser: str, profile: str, x: str, *, data_path: Path | None = None) -> Path | None:
+def get_x_in_profile_path(browser: str, profile: str, x: str, *, data_path: Path = None) -> Path | None:
     if data_path is None:
         data_path = get_data_path(browser)
     if data_path is None:
@@ -92,7 +92,7 @@ def overwrite_preferences_db(new_pref_db: dict, browser: str, profile: str) -> b
         return False
 
     with open(preferences_path, "w", encoding="utf8") as f:
-        json.dump(new_pref_db, f)
+        json.dump(new_pref_db, f, indent=4, ensure_ascii=False)
 
     return True
 
@@ -122,12 +122,12 @@ def overwrite_secure_preferences_db(new_s_pref_db: dict, browser: str, profile: 
         return False
 
     with open(secure_pref_path, "w", encoding="utf8") as f:
-        json.dump(new_s_pref_db, f)
+        json.dump(new_s_pref_db, f, indent=4, ensure_ascii=False)
 
     return True
 
 
-def get_local_state_db(browser: str, *, data_path: Path | None = None) -> dict:
+def get_local_state_db(browser: str, *, data_path: Path = None) -> dict:
     if data_path is None:
         data_path = get_data_path(browser)
     if data_path is None:
@@ -143,7 +143,7 @@ def get_local_state_db(browser: str, *, data_path: Path | None = None) -> dict:
     return lst_db
 
 
-def get_profile_paths(browser: str, *, data_path: Path | None = None) -> list[Path]:
+def get_profile_paths(browser: str, *, data_path: Path = None) -> list[Path]:
     if data_path is None:
         data_path = get_data_path(browser)
     if data_path is None:
@@ -156,4 +156,29 @@ def get_profile_paths(browser: str, *, data_path: Path | None = None) -> list[Pa
     else:
         profile_paths = [Path(data_path, p) for p in info_cache]
 
+    profile_paths.sort(key=lambda p: 0 if p.name == "Default" else int(p.name.split(" ")[1]))
+
     return profile_paths
+
+
+def get_extension_settings(browser: str, profile: str, s_pref_db: dict = None, pref_db: dict = None) -> dict:
+    if s_pref_db is None:
+        s_pref_db = get_secure_preferences_db(browser, profile)
+    ext_settings = get_with_chained_keys(s_pref_db, ["extensions", "settings"])  # type: dict
+    if ext_settings is None:
+        if pref_db is None:
+            pref_db = get_preferences_db(browser, profile)
+        ext_settings = get_with_chained_keys(pref_db, ["extensions", "settings"])  # type: dict
+        if ext_settings is None:
+            return {}
+
+    return ext_settings
+
+
+def get_protection_macs_es(browser: str, profile: str, s_pref_db: dict = None) -> dict:
+    if s_pref_db is None:
+        s_pref_db = get_secure_preferences_db(browser, profile)
+    protection = get_with_chained_keys(s_pref_db, ["protection", "macs", "extensions", "settings"])  # type: dict
+    if protection is None:
+        return {}
+    return protection

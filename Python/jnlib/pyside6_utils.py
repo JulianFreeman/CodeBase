@@ -1,5 +1,5 @@
 # code: utf8
-from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6 import QtWidgets, QtCore, QtGui, QtSql
 
 
 def change_color(widget: QtWidgets.QWidget,
@@ -10,7 +10,7 @@ def change_color(widget: QtWidgets.QWidget,
     widget.setPalette(pal)
 
 
-def change_font(widget: QtWidgets.QWidget, family: str, size: int, bold=False):
+def change_font(widget: QtWidgets.QWidget, family: str, size: int, bold: bool = False):
     font = widget.font()
     font.setFamily(family)
     font.setPointSize(size)
@@ -22,7 +22,7 @@ class PushButtonWithId(QtWidgets.QPushButton):
 
     clicked_with_id = QtCore.Signal(str)
 
-    def __init__(self, ids: str, parent: QtWidgets.QWidget | None = None, title: str = ""):
+    def __init__(self, ids: str, parent: QtWidgets.QWidget = None, title: str = ""):
         super().__init__(title, parent)
         self.ids = ids
         self.clicked.connect(self.on_self_clicked)
@@ -42,7 +42,25 @@ def accept_warning(widget: QtWidgets.QWidget, condition: bool,
 
 class HorizontalLine(QtWidgets.QFrame):
 
-    def __init__(self, parent: QtWidgets.QWidget | None = None):
+    def __init__(self, parent: QtWidgets.QWidget = None):
         super().__init__(parent)
         self.setFrameShape(QtWidgets.QFrame.Shape.HLine)
         self.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+
+
+class VerticalLine(QtWidgets.QFrame):
+
+    def __init__(self, parent: QtWidgets.QWidget = None):
+        super().__init__(parent)
+        self.setFrameShape(QtWidgets.QFrame.Shape.VLine)
+        self.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+
+
+def get_sql_database(conn_name: str, file_path: str) -> QtSql.QSqlDatabase:
+    if QtSql.QSqlDatabase.contains(conn_name):
+        db = QtSql.QSqlDatabase.database(conn_name, open=False)
+    else:
+        db = QtSql.QSqlDatabase.addDatabase("QSQLITE", conn_name)
+        db.setDatabaseName(file_path)
+
+    return db
