@@ -6,7 +6,7 @@ from jnlib.pyside6_utils import PushButtonWithId, HorizontalLine
 
 class ChromSettingsWin(QtWidgets.QDialog):
 
-    def __init__(self, parent: QtWidgets.QWidget | None = None):
+    def __init__(self, parent: QtWidgets.QWidget = None):
         super().__init__(parent)
         self.resize(540, 140)
         self.setWindowTitle("设置")

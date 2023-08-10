@@ -104,14 +104,15 @@ def is_google_drive_url(url):
     return urlparse(url).netloc in ("docs.google.com", "drive.google.com")
 
 
-def bm2xml(browser, xml_filepath, google_only):
-    bm_db, _ = scan_bookmarks(browser)
+def bm2xml(browser, xml_filepath, google_only, bmx_db: dict = None):
+    if bmx_db is None:
+        bmx_db, _ = scan_bookmarks(browser)
     root = Group("Bookmarks")
-    for url in bm_db:
+    for url in bmx_db:
         if google_only and not is_google_drive_url(url):
             continue
 
-        info = bm_db[url]
+        info = bmx_db[url]
         name = info["name"]
         prof, addr = info["profiles_pos"][0]  # type: str, str
 

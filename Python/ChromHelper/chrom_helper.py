@@ -1,12 +1,15 @@
 # code: utf8
 import sys
+import shutil
+from pathlib import Path
 from PySide6 import QtWidgets, QtGui
+
+from jnlib.general_utils import get_log_dir
 
 from chrom_settings import ChromSettingsWin
 from check_plugins import CheckPluginsWin
 from check_bookmarks import CheckBookmarksWin
 from check_settings import CheckSettingsWin
-from export_bookmarks import ExportBookmarksWin
 
 import chrom_helper_rc
 
@@ -21,7 +24,6 @@ class UiChromHelperMainWin(object):
             "bsc": QtGui.QIcon(":/img/bsc_16.png"),
             "bpc": QtGui.QIcon(":/img/bpc_16.png"),
             "bmc": QtGui.QIcon(":/img/bmc_16.png"),
-            "ebk": QtGui.QIcon(":/img/ebk_16.png"),
         }
 
         window.resize(860, 680)
@@ -55,9 +57,12 @@ class UiChromHelperMainWin(object):
 
         self.menu_help = self.menu_bar.addMenu("帮助")
         self.act_settings = QtGui.QAction("偏好设置", window)
+        self.act_clear_log = QtGui.QAction("清空日志", window)
         self.act_about = QtGui.QAction("关于", window)
         self.act_about_qt = QtGui.QAction("关于 Qt", window)
         self.menu_help.addAction(self.act_settings)
+        self.menu_help.addSeparator()
+        self.menu_help.addAction(self.act_clear_log)
         self.menu_help.addSeparator()
         self.menu_help.addAction(self.act_about)
         self.menu_help.addAction(self.act_about_qt)
@@ -70,19 +75,21 @@ class UiChromHelperMainWin(object):
         self.tw_cw.addTab(self.wg_check_bookmarks, icons["bmc"], "书签")
         self.wg_check_settings = CheckSettingsWin(browser, self.tw_cw)
         self.tw_cw.addTab(self.wg_check_settings, icons["bsc"], "设置")
-        self.wg_export_bookmarks = ExportBookmarksWin(browser, self.tw_cw)
-        self.tw_cw.addTab(self.wg_export_bookmarks, icons["ebk"], "导出书签")
 
 
 class ChromHelperMainWin(QtWidgets.QMainWindow):
 
-    def __init__(self, parent: QtWidgets.QWidget | None = None, *, version: list[int]):
+    def __init__(self, parent: QtWidgets.QWidget = None,
+                 *, org_name: str, app_name: str, version: list[int]):
         super().__init__(parent)
         self.version = version
+        self.org_name = org_name
+        self.app_name = app_name
         self.ui = UiChromHelperMainWin(self)
 
         # ====== Menu Bar =========
         self.ui.act_settings.triggered.connect(self.on_act_settings_triggered)
+        self.ui.act_clear_log.triggered.connect(self.on_act_clear_log_triggered)
         self.ui.act_about.triggered.connect(self.on_act_about_triggered)
         self.ui.act_about_qt.triggered.connect(self.on_act_about_qt_triggered)
         self.ui.acg_browsers.triggered.connect(self.on_acg_browsers_triggered)
@@ -100,6 +107,15 @@ class ChromHelperMainWin(QtWidgets.QMainWindow):
         cs_win = ChromSettingsWin(self)
         cs_win.exec()
 
+    def on_act_clear_log_triggered(self):
+        log_dir = get_log_dir(sys.platform)
+        if log_dir is None:
+            return
+        app_log_dir = Path(log_dir, self.org_name, self.app_name)
+        if not app_log_dir.exists():
+            return
+        shutil.rmtree(app_log_dir, ignore_errors=True)
+
     def on_act_about_triggered(self):
         version = self.version
         about_text = ("Chromium 核心浏览器辅助工具\n\n旨在更方便地对以 Chromium 为核心的浏览器"
@@ -116,7 +132,7 @@ def launch(org_name: str, app_name: str, has_log: bool, log_err: str, version: l
     app.setOrganizationName(org_name)
     app.setApplicationName(app_name)
 
-    win = ChromHelperMainWin(version=version)
+    win = ChromHelperMainWin(org_name=org_name, app_name=app_name, version=version)
     win.show()
     if not has_log:
         QtWidgets.QMessageBox.information(win, "提示", f"日志记录未开启：{log_err}")

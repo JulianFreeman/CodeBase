@@ -290,7 +290,7 @@ class UiCheckSettingsWin(object):
 
 class CheckSettingsWin(QtWidgets.QWidget):
 
-    def __init__(self, browser: str, parent: QtWidgets.QWidget | None = None):
+    def __init__(self, browser: str, parent: QtWidgets.QWidget = None):
         super().__init__(parent)
         self.ui = UiCheckSettingsWin(self)
         self.browser = browser

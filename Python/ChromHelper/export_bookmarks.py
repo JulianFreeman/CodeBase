@@ -50,7 +50,6 @@ class UiExportBookmarksWin(object):
         self.vly_m.addLayout(self.hly_bot)
 
         self.cbx_google_only = QtWidgets.QCheckBox("仅导出谷歌网盘链接", window)
-        self.cbx_google_only.setChecked(True)
         self.cbx_keep_xml = QtWidgets.QCheckBox("保留 XML 文件", window)
         self.cbx_clear_pass = QtWidgets.QCheckBox("导出后清空密码", window)
         self.cbx_clear_pass.setChecked(True)
@@ -68,11 +67,12 @@ class UiExportBookmarksWin(object):
         self.vly_m.addWidget(self.txe_output)
 
 
-class ExportBookmarksWin(QtWidgets.QWidget):
+class ExportBookmarksWin(QtWidgets.QDialog):
 
-    def __init__(self, browser: str, parent: QtWidgets.QWidget | None = None):
+    def __init__(self, browser: str, parent: QtWidgets.QWidget = None, bmx_db: dict = None):
         super().__init__(parent)
         self.browser = browser
+        self.bmx_db = bmx_db
         self.ui = UiExportBookmarksWin(self)
         self._kpx_ver = ()
         self.prc_kpx_ver = QtCore.QProcess(self)
@@ -194,8 +194,8 @@ class ExportBookmarksWin(QtWidgets.QWidget):
         self.prc_kpx_import.setProgram(cli_path)
         self.prc_kpx_import.setArguments(arguments)
 
-        self.ui.txe_output.append("正在导出书签……")
-        bm2xml(browser, xml_path, google_only)
+        self.ui.txe_output.append(f"正在导出 {len(self.bmx_db)} 个书签……")
+        bm2xml(browser, xml_path, google_only, self.bmx_db)
         self.ui.txe_output.append("正在生成数据库文件……")
         self.prc_echo_pass.start()
         self.prc_kpx_import.start()

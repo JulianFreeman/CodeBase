@@ -11,7 +11,7 @@ from scan_extensions import delete_extension
 
 class ShowProfilesWin(QtWidgets.QDialog):
 
-    def __init__(self, browser: str, kind: str, parent: QtWidgets.QWidget | None = None):
+    def __init__(self, browser: str, kind: str, parent: QtWidgets.QWidget = None):
         super().__init__(parent)
         self.kind = kind
         self.browser = browser

@@ -14,7 +14,7 @@ from animated_toggle import AnimatedToggle
 
 class CheckPluginsWin(QtWidgets.QWidget):
 
-    def __init__(self, browser: str, parent: QtWidgets.QWidget | None = None):
+    def __init__(self, browser: str, parent: QtWidgets.QWidget = None):
         super().__init__(parent)
         self.browser = browser
         self.vly_m = QtWidgets.QVBoxLayout()

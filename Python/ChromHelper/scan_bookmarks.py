@@ -55,7 +55,24 @@ def scan_bookmarks(browser: str) -> tuple[dict[str, dict], dict[str, str]]:
     for p in profile_paths:
         _handle_single_profile(p, bmx_db)
 
-    return bmx_db, {bmx_db[k]["name"]: k for k in bmx_db}
+    pre_bmx_mp = {}  # type: dict[str, list]
+    for url in bmx_db:
+        name = bmx_db[url]["name"]
+        pre_bmx_mp.setdefault(name, [])
+        pre_bmx_mp[name].append(url)
+
+    bmx_mp = {}  # type: dict[str, str]
+    for name, urls in pre_bmx_mp.items():
+        i = 0
+        for u in urls:
+            if i != 0:
+                new_name = f"{name} [{i}]"
+            else:
+                new_name = name
+            bmx_mp[new_name] = u
+            i += 1
+
+    return bmx_db, bmx_mp
 
 
 def delete_bookmark(browser: str, profile: str, url: str) -> bool:
