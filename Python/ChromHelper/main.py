@@ -8,7 +8,7 @@ from jnlib.general_utils import get_log_dir
 
 from chrom_helper import launch
 
-version = [1, 5, 0, 20230810]
+version = [1, 5, 1, 20230817]
 
 ORG_NAME = "JnPrograms"
 APP_NAME = "ChromHelper"
@@ -17,7 +17,7 @@ APP_NAME = "ChromHelper"
 def init_logging() -> tuple[bool, str]:
     log_dir = get_log_dir(sys.platform)
     if log_dir is None:
-        return False, f"未找到路径 [{log_dir}]"
+        return False, f"未找到路径"
 
     app_log_dir = Path(log_dir, ORG_NAME, APP_NAME)
     app_log_dir.mkdir(parents=True, exist_ok=True)
