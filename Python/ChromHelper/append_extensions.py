@@ -273,9 +273,10 @@ class AppendExtensionsWin(QtWidgets.QWidget):
             overwrite_preferences_db(pref_db_i, self.browser, prf)
             overwrite_secure_preferences_db(s_pref_db_i, self.browser, prf)
 
+        total = len(self.tar_profiles)
         self.on_pbn_clear_tar_profiles_clicked()
 
         QtWidgets.QMessageBox.information(
             self, "信息",
-            f"已为 {len(self.tar_profiles)} 个用户追加 {len(internal_exts)} 个在线插件和 {len(external_exts)} 个离线插件。"
+            f"已为 {total} 个用户追加 {len(internal_exts)} 个在线插件和 {len(external_exts)} 个离线插件。"
         )
