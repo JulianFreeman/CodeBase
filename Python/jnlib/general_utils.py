@@ -46,7 +46,7 @@ def get_log_dir(plat: str) -> Path | None:
         case "win32":
             log_dir = os.path.expandvars("%appdata%")
         case "darwin":
-            log_dir = os.path.expanduser("~") + "/.local/share"
+            log_dir = os.path.expanduser("~") + "/Library/Application Support"
         case _:
             return None
     log_dir_p = Path(log_dir)
