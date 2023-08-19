@@ -156,7 +156,7 @@ def get_profile_paths(browser: str, *, data_path: Path = None) -> list[Path]:
     else:
         profile_paths = [Path(data_path, p) for p in info_cache]
 
-    profile_paths.sort(key=lambda p: 0 if p.name == "Default" else int(p.name.split(" ")[1]))
+    profile_paths.sort(key=lambda p: 0 if p.name == "Default" else int(p.name.split(" ", 1)[1]))
 
     return profile_paths
 
