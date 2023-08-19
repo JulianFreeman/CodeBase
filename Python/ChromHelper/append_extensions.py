@@ -135,7 +135,7 @@ class AppendExtensionsWin(QtWidgets.QWidget):
                 })
 
         profile_names = list(self.profile_ext_map.keys())
-        profile_names.sort(key=lambda x: 0 if x.split(" - ")[0] == "Default" else int(x.split(" - ")[0].split(" ")[1]))
+        profile_names.sort(key=lambda x: 0 if x.split(" - ")[0] == "Default" else int(x.split(" - ")[0].split(" ", 1)[1]))
         self.ui.lw_profiles.addItems(profile_names)
 
     def on_pbn_set_temp_clicked(self):

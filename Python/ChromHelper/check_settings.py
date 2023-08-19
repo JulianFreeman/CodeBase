@@ -392,7 +392,7 @@ class CheckSettingsWin(QtWidgets.QWidget):
             return None, None
 
         profiles = list(profiles_dic.keys())
-        profiles.sort(key=lambda x: 0 if x == "Default" else int(x.split(" ")[1]))
+        profiles.sort(key=lambda x: 0 if x == "Default" else int(x.split(" ", 1)[1]))
 
         return profiles, profiles_dic
 
