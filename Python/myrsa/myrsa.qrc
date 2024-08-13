@@ -1,8 +1,0 @@
-<RCC>
-  <qresource prefix="translations">
-    <file>myrsa_zh_cn.qm</file>
-  </qresource>
-  <qresource prefix="/">
-    <file>myrsa16.ico</file>
-  </qresource>
-</RCC>
